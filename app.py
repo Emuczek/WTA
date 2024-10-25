@@ -1,11 +1,16 @@
-import sys
-from PySide6.QtCore import Qt, Slot
-from PySide6.QtWidgets import (QApplication, QDialog, QVBoxLayout, QMainWindow,
-                               QDockWidget, QPushButton, QWidget, QToolBar,
-                               QTableWidget, QTableWidgetItem, QLabel)
+import sys, time
+from PySide6.QtCore import Qt, Slot, QTimer
+from PySide6.QtWidgets import (QApplication, QComboBox, QDialog,
+                               QDialogButtonBox, QGridLayout, QGroupBox,
+                               QFormLayout, QHBoxLayout, QLabel, QLineEdit,
+                               QMenu, QMenuBar, QPushButton, QSpinBox,
+                               QTextEdit, QVBoxLayout, QMainWindow, QDockWidget, QToolBar,  QTableWidget,
+                               QTableWidgetItem, QWidget, QApplication, QMainWindow, QDockWidget,
+                               QVBoxLayout, QLabel, QProgressBar, QWidget, QPushButton)
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtGui import QAction, QKeySequence
 from pyvis.network import Network
+
 
 class GraphWidget(QWidget):
     def __init__(self):
@@ -21,10 +26,8 @@ class GraphWidget(QWidget):
         self.draw_graph()
 
     def draw_graph(self):
-        # Tworzenie grafu
         net = Network(notebook=True)
 
-        # Dodawanie wierzchołków i krawędzi
         net.add_node(1, label='Node 1')
         net.add_node(2, label='Node 2')
         net.add_node(3, label='Node 3')
@@ -32,16 +35,163 @@ class GraphWidget(QWidget):
         net.add_edge(1, 3)
         net.add_edge(2, 3)
 
-        # Generowanie HTML i wyświetlanie w QWebEngineView
         net.show("graph.html")
         with open("graph.html", "r") as f:
             html = f.read()
         self.web_view.setHtml(html)
 
+
 class Dialog(QDialog):
+    num_grid_rows = 3
+    num_buttons = 4
+
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Dialog")
+
+        self._horizontal_group_box = None
+        self._small_editor = None
+        self._grid_group_box = None
+        self._exit_action = None
+        self._file_menu = None
+        self._menu_bar = None
+        self._form_group_box = None
+        self.create_menu()
+        self.create_horizontal_group_box()
+        self.create_grid_group_box()
+        self.create_form_group_box()
+
+        big_editor = QTextEdit()
+        big_editor.setPlainText("This widget takes up all the remaining space "
+                                "in the top-level layout.")
+
+        button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+
+        button_box.accepted.connect(self.accept)
+        button_box.rejected.connect(self.reject)
+
+        main_layout = QVBoxLayout()
+        main_layout.setMenuBar(self._menu_bar)
+        main_layout.addWidget(self._horizontal_group_box)
+        main_layout.addWidget(self._grid_group_box)
+        main_layout.addWidget(self._form_group_box)
+        main_layout.addWidget(big_editor)
+        main_layout.addWidget(button_box)
+        self.setLayout(main_layout)
+
+        self.setWindowTitle("Basic Layouts")
+
+    def create_menu(self):
+        self._menu_bar = QMenuBar()
+
+        self._file_menu = QMenu("&File", self)
+        self._exit_action = self._file_menu.addAction("E&xit")
+        self._menu_bar.addMenu(self._file_menu)
+
+        self._exit_action.triggered.connect(self.accept)
+
+    def create_horizontal_group_box(self):
+        self._horizontal_group_box = QGroupBox("Horizontal layout")
+        layout = QHBoxLayout()
+
+        for i in range(Dialog.num_buttons):
+            button = QPushButton(f"Button {i + 1}")
+            layout.addWidget(button)
+
+        self._horizontal_group_box.setLayout(layout)
+
+    def create_grid_group_box(self):
+        self._grid_group_box = QGroupBox("Grid layout")
+        layout = QGridLayout()
+
+        for i in range(Dialog.num_grid_rows):
+            label = QLabel(f"Line {i + 1}:")
+            line_edit = QLineEdit()
+            layout.addWidget(label, i + 1, 0)
+            layout.addWidget(line_edit, i + 1, 1)
+
+        self._small_editor = QTextEdit()
+        self._small_editor.setPlainText("This widget takes up about two thirds of the grid layout.")
+
+        layout.addWidget(self._small_editor, 0, 2, 4, 1)
+
+        layout.setColumnStretch(1, 10)
+        layout.setColumnStretch(2, 20)
+        self._grid_group_box.setLayout(layout)
+
+    def create_form_group_box(self):
+        self._form_group_box = QGroupBox("Form layout")
+        layout = QFormLayout()
+        layout.addRow(QLabel("Line 1:"), QLineEdit())
+        layout.addRow(QLabel("Line 2, long text:"), QComboBox())
+        layout.addRow(QLabel("Line 3:"), QSpinBox())
+        self._form_group_box.setLayout(layout)
+
+
+class StatusDockWidget(QDockWidget):
+    def __init__(self):
+        super().__init__("Informacje o przebiegu")
+
+        # Centralny widget dla dock widgeta
+        self.status_widget = QWidget()
+        self.setWidget(self.status_widget)
+
+        # Layout
+        layout = QVBoxLayout()
+
+        layout.addStretch(0)
+
+        # Etykieta do wyświetlania czasu
+        self.time_label = QLabel("Czas: 0 s")
+        layout.addWidget(self.time_label)
+
+        # Etykieta do wyświetlania aktualnej wartości
+        self.value_label = QLabel("Aktualna wartość: 0")
+        layout.addWidget(self.value_label)
+
+        # Pasek postępu
+        self.progress_bar = QProgressBar()
+        layout.addWidget(self.progress_bar)
+
+        # Ustawiamy layout
+        self.status_widget.setLayout(layout)
+
+        # Timer do aktualizacji czasu
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_time)
+        self.elapsed_time = 0
+
+        # Inicjalizacja paska postępu
+        self.current_value = 0
+
+    @Slot(name="processing")
+    def start_processing(self):
+        self.elapsed_time = 0
+        self.current_value = 0
+        self.progress_bar.setValue(0)
+        self.timer.start(1000)  # Aktualizacja co sekundę
+
+        # Symulacja obliczeń
+        self.simulate_processing()
+
+    def update_time(self):
+        self.elapsed_time += 1
+        self.time_label.setText(f"Czas: {self.elapsed_time} s")
+
+        # Zaktualizuj aktualną wartość i pasek postępu
+        self.current_value += 0.1  # Przykładowa aktualizacja
+        if self.current_value > 100:
+            self.current_value = 100
+
+        self.value_label.setText(f"Aktualna wartość: {self.current_value}")
+        self.progress_bar.setValue(self.current_value)
+
+    def simulate_processing(self):
+        # Funkcja symulująca długotrwałe obliczenia
+        while self.current_value < 100:
+            time.sleep(0.01)  # Symuluj opóźnienie
+            self.update_time()  # Aktualizuj stan na dock widget
+        self.timer.stop()
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -53,6 +203,8 @@ class MainWindow(QMainWindow):
 
         # Tworzenie dock widgetów
         self.create_dock_widgets()
+        self.status_dock_widget = StatusDockWidget()
+        self.addDockWidget(Qt.BottomDockWidgetArea, self.status_dock_widget)
 
         # Tworzenie toolbara
         self.create_toolbars()
@@ -61,96 +213,88 @@ class MainWindow(QMainWindow):
         self.status.showMessage("Witamy!")
 
         # Menu
-        self.menu = self.menuBar()
-        self.file_menu = self.menu.addMenu("Informacje")
+        self.menu1 = self.menuBar()
+        self.menu2 = self.menuBar()
+        self.file_menu = self.menu1.addMenu("Wczytywanie danych")
+        self.info_menu = self.menu2.addMenu("Informacje")
 
         # Exit QAction
-        exit_action = QAction("Exit", self)
+        exit_action = QAction("Import za pomocą pliku .csv", self)
         exit_action.setShortcut(QKeySequence.Open)
-        exit_action.setStatusTip("Kliknij tutaj, aby wykonać Akcję 1")
+        exit_action.setStatusTip("Kliknij tutaj, zaimportować plik csv")
         exit_action.triggered.connect(self.close)
 
+        exi_action = QAction("O co tu chodzi ej", self)
+        exi_action.setShortcut(QKeySequence.Open)
+        exi_action.setStatusTip("Kliknij tutaj, aby dowiedzieć się wiecej")
+        exi_action.triggered.connect(self.close)
+
         self.file_menu.addAction(exit_action)
+        self.info_menu.addAction(exi_action)
 
         geometry = self.screen().availableGeometry()
         self.setFixedSize(geometry.width() * 0.8, geometry.height() * 0.7)
 
     def create_dock_widgets(self):
-        # Pierwszy dock widget
-        dock1 = QDockWidget("Dockable", self)
+        dock1 = QDockWidget("Wybór metody rozwiązania", self)
         dock1.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea | Qt.TopDockWidgetArea |
                               Qt.BottomDockWidgetArea)
 
-        label1 = QLabel("Dock Widget 1", dock1)
-        dock1.setWidget(label1)
+        layout_wybor = QVBoxLayout()
+        heuristic_button = QPushButton("Heurystyka 'TabuSearch'")
+        heuristic_button.clicked.connect(self.open_dialog)
+        linapprox_button = QPushButton("Aproksymacja liniowa")
+        linapprox_button.clicked.connect(self.open_dialog)
+        qubo_button = QPushButton("Kwantowe wyżarzanie")
+        qubo_button.clicked.connect(self.open_dialog)
 
-        # Dokowanie na lewą stronę
+        layout_wybor.addWidget(heuristic_button)
+        layout_wybor.addWidget(linapprox_button)
+        layout_wybor.addWidget(qubo_button)
+        layout_wybor.addStretch(0)
+
+        wybor_widget = QWidget()
+        wybor_widget.setLayout(layout_wybor)
+        dock1.setWidget(wybor_widget)
+
         self.addDockWidget(Qt.LeftDockWidgetArea, dock1)
 
-        # Drugi dock widget
-        dock2 = QDockWidget("Another Dockable", self)
-        dock2.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea | Qt.TopDockWidgetArea |
-                              Qt.BottomDockWidgetArea)
-
-        some_layout = QVBoxLayout()
-
-        button = QPushButton("Button in Dock", dock2)
-        button.setStatusTip("Gowienko")
-        button.clicked.connect(self.open_dialog)
-        some_layout.addWidget(button)
-
-        # Tworzenie tabeli
-        table_widget = QTableWidget(3, 3)  # Tabela z 3 wierszami i 3 kolumnami
-        table_widget.setHorizontalHeaderLabels(["Kolumna 1", "Kolumna 2", "Kolumna 3"])
-
-        # Wypełnianie tabeli przykładowymi danymi
-        for row in range(3):
-            for column in range(3):
-                item = QTableWidgetItem(f"Item {row + 1}, {column + 1}")
-                table_widget.setItem(row, column, item)
-
-        # Opakowanie tabeli w widget
-        table_container = QWidget()
-        layout = QVBoxLayout()
-        layout.addWidget(table_widget)
-        table_container.setLayout(layout)
-
-        some_layout.addWidget(table_container)
-
-        # Tworzymy centralny widget dla dock widgeta
-        central_widget = QWidget()
-        central_widget.setLayout(some_layout)
-
-        # Ustawiamy centralny widget w dock widget
-        dock2.setWidget(central_widget)
-
-        # Dokowanie na górną stronę
-        self.addDockWidget(Qt.TopDockWidgetArea, dock2)
+        # dock2 = QDockWidget("Status przebiegu", self)
+        # dock2.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea | Qt.TopDockWidgetArea |
+        #                       Qt.BottomDockWidgetArea)
+        #
+        # some_layout = QVBoxLayout()
+        #
+        # table_widget = QTableWidget(3, 1)
+        # table_widget.setHorizontalHeaderLabels(["Wartość"])
+        #
+        # for row in range(3):
+        #     for column in range(3):
+        #         item = QTableWidgetItem(f"Item {row + 1}, {column + 1}")
+        #         table_widget.setItem(row, column, item)
+        #
+        # table_container = QWidget()
+        # layout = QVBoxLayout()
+        # layout.addWidget(table_widget)
+        # table_container.setLayout(layout)
+        #
+        # some_layout.addWidget(table_container)
+        #
+        # central_widget = QWidget()
+        # central_widget.setLayout(some_layout)
+        #
+        # dock2.setWidget(central_widget)
+        # self.addDockWidget(Qt.RightDockWidgetArea, dock2)
 
     def create_toolbars(self):
-        # Pierwszy toolbar
-        toolbar1 = QToolBar("Main Toolbar")
-        self.addToolBar(Qt.TopToolBarArea, toolbar1)
-
-        # Przykład akcji w toolbarze
-        action1 = QAction("Action 1", self)
-        action1.triggered.connect(self.action_triggered)
-        toolbar1.addAction(action1)
-
-        action2 = QAction("Action 2", self)
-        action2.triggered.connect(self.action_triggered)
-        toolbar1.addAction(action2)
-
-        # Drugi toolbar
         toolbar2 = QToolBar("Secondary Toolbar")
-        self.addToolBar(Qt.LeftToolBarArea, toolbar2)
+        self.addToolBar(Qt.TopToolBarArea, toolbar2)
 
-        # Dodajmy przyciski do drugiego toolbara
-        button1 = QPushButton("Button 1")
-        button1.clicked.connect(self.open_dialog)
+        button1 = QPushButton("Rozpocznij obliczanie")
+        button1.clicked.connect(self.status_dock_widget.start_processing)
         toolbar2.addWidget(button1)
 
-        button2 = QPushButton("Button 2")
+        button2 = QPushButton("Zakończ obliczanie")
         button2.clicked.connect(self.open_dialog)
         toolbar2.addWidget(button2)
 
@@ -161,12 +305,12 @@ class MainWindow(QMainWindow):
     @staticmethod
     def open_dialog():
         dialog = Dialog()
-        dialog.exec()  # Wyświetl okno dialogowe w trybie modalnym
+        dialog.exec()
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     main = MainWindow()
-    main.setWindowTitle("Pyvis Graph Example")
+    main.setWindowTitle("Weapon target assingment solver")
     main.show()
     sys.exit(app.exec())
