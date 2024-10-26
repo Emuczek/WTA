@@ -6,6 +6,8 @@ from PySide6.QtWidgets import (
     QProgressBar, QWidget, QPushButton
 )
 from modules.quizProblemHeuristic import CalculationQuizHeuristic
+from modules.objectivefunction import objective
+from modules.openData import openData
 
 class Worker(QThread):
     # Sygnalizuje aktualizację postępu
@@ -104,7 +106,9 @@ class MainWindow(QMainWindow):
 if __name__ == "__main__":
     classs = CalculationQuizHeuristic()
     classs.calculate('C:/Users/Jakub/PycharmProjects/pythonProject/data/testInstance2x2.json')
-
+    m, n, v, w, p = openData('C:/Users/Jakub/PycharmProjects/pythonProject/data/testInstance2x2.json', True)
+    print(objective(m, n, v, w, p,  [[0., 1.],
+                                     [0., 1.]]))
 
     # app = QApplication(sys.argv)
     # main_window = MainWindow()

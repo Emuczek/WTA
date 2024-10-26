@@ -1,5 +1,4 @@
 import numpy as np
-from modules.openData import openData
 
 def objective(m, n, v, w, p, x_dvar):
     obj = 0
@@ -7,6 +6,6 @@ def objective(m, n, v, w, p, x_dvar):
         temp = 0
         for i in range(m):
             temp += x_dvar[i][j] * np.log(1-p[i][j])
-        obj += V[j] * np.exp(temp)
+        obj += v[j] * np.exp(temp)
 
     return obj
