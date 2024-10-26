@@ -3,14 +3,20 @@
 
 import copy
 import numpy as np
-from calculations.calculationInterface import CalculationInterface
+from modules.openData import openData
+from modules.calculationInterface import CalculationInterface
 
 def main(data_path: str):
-    n = int(2)  # number of incoming targets (J[j] - [1,2, .. n])
-    m = int(2)  # number of weapons (I[i] - [1,2, .. m])
+    n = int()  # number of incoming targets (J[j] - [1,2, .. n])
+    m = int()  # number of weapons (I[i] - [1,2, .. m])
 
     V = np.zeros(n)   # value of the targets, negative effects on the system being defended
     p = np.zeros((m, n))  # associated probability p(i, j) of destroying target j | q(i, j) = 1 - p(i, j)
+
+    # Data read
+
+    m, n, V, w, p0 = openData(data_path, True)
+    p = [copy.deepcopy(x) for x in p0]
 
     y_first_max = float(0)  # maximum value of y
     y_second_high = float(0)  # second-highest value of y
@@ -35,17 +41,6 @@ def main(data_path: str):
     # Algorithm #
     #############
 
-    # DELETE
-    # TEST RUN
-
-    V[0] = 90
-    V[1] = 10
-    p[0][0] = 0.111
-    p[0][1] = 0.8
-    p[1][0] = 0.1
-    p[1][1] = 0.6
-
-
     # 1. Set x as a zeros matrix n x m.
 
     var_x = np.zeros((m, n))  # binary valued which weapon is assignet to which target
@@ -59,13 +54,11 @@ def main(data_path: str):
         for _ in range(m - 1):
             Vmatrix = np.vstack((Vmatrix, V))
 
-        y = np.multiply(np.reciprocal(np.ones(np.shape(p)) - p), np.multiply(Vmatrix, p))
-
+        y0 = np.multiply(np.reciprocal(np.ones(np.shape(p)) - p), np.multiply(Vmatrix, p))
+        y = copy.deepcopy(y0)
+        print(f"Y: {p}")
         print(f"Y: {y}")
 
-        # DELETE
-        # y[0, 1] = 10
-        # y[1, 0] = 20
 
         # 3. Set y(i1, j1) as the maximum value of y and y(i2, j2) as the second highest value of y.
 
@@ -73,8 +66,9 @@ def main(data_path: str):
 
         first_indexes = np.unravel_index(np.argmax(y), y.shape)
         i_first_max = first_indexes[0]
+        print(i_first_max)
         j_first_max = first_indexes[1]
-
+        print(j_first_max)
         y_copy = copy.deepcopy(y)
 
         y_copy[i_first_max, j_first_max] = 0
@@ -83,8 +77,9 @@ def main(data_path: str):
 
         second_indexes = np.unravel_index(np.argmax(y_copy), y_copy.shape)
         i_second_high = second_indexes[0]
+        print(i_second_high)
         j_second_high = second_indexes[1]
-
+        print(j_second_high)
         # 4. check if i1 equals i2 (i_first_max == i_second_high)
 
         if i_first_max == i_second_high:
@@ -95,7 +90,7 @@ def main(data_path: str):
 
             k += 1  # increment step by 1
 
-            if k == n:  # k = n?
+            if k == m:  # k = n?
                 print(f"Terminate, solve: \n {var_x}")
                 return var_x
 
@@ -131,7 +126,7 @@ def main(data_path: str):
 
                 k += 1  # increment step by 1
 
-                if k == n:  # k = n?
+                if k == m:  # k = n?
                     print(f"Terminate, solve: \n {var_x}")
                     return var_x
 
@@ -143,17 +138,17 @@ def main(data_path: str):
                     # and GOTO 2.
 
             else:
-                var_x[i_second_high, j_max_second] = 1  # 5. Set choosen weapon in decision variable.
+                var_x[i_second_high, j_second_high] = 1  # 5. Set choosen weapon in decision variable.
 
                 k += 1  # increment step by 1
 
-                if k == n:  # k = n?
+                if k == m:  # k = n?
                     print(f"Terminate, solve: \n {var_x}")
                     return var_x
 
                 else:
                     # 6. Redefine
-                    V[j_max_second] = V[j_max_second] * (1 - p[i_second_high][j_max_second])
+                    V[j_second_high] = V[j_second_high] * (1 - p[i_second_high][j_second_high])
                     for j in range(n):
                         p[i_second_high][j] = 0
                     # and GOTO 2.
@@ -163,4 +158,4 @@ def main(data_path: str):
 class CalculationQuizHeuristic(CalculationInterface):
 
     def calculate(self, data_path: str):
-        return calculate(data_path)
+        return main(data_path)

@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (
     QApplication, QMainWindow, QDockWidget, QVBoxLayout, QLabel,
     QProgressBar, QWidget, QPushButton
 )
+from modules.quizProblemHeuristic import CalculationQuizHeuristic
 
 class Worker(QThread):
     # Sygnalizuje aktualizację postępu
@@ -101,8 +102,14 @@ class MainWindow(QMainWindow):
         self.addDockWidget(Qt.RightDockWidgetArea, self.status_dock_widget)
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    main_window = MainWindow()
-    main_window.resize(600, 400)
-    main_window.show()
-    sys.exit(app.exec())
+    classs = CalculationQuizHeuristic()
+    classs.calculate('C:/Users/Jakub/PycharmProjects/pythonProject/data/testInstance2x2.json')
+
+
+    # app = QApplication(sys.argv)
+    # main_window = MainWindow()
+    # main_window.resize(600, 400)
+    # main_window.show()
+    # sys.exit(app.exec())
+
+

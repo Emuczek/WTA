@@ -1,0 +1,7 @@
+{
+  "weaponTypeCount": 2,
+  "targetCount": 2,
+  "targetWeights": [10, 90],
+  "weaponsSupply": [1, 4],
+  "propabilities": [[0.111, 0.8], [0.1, 0.6]]
+}
