@@ -35,8 +35,8 @@ class GraphWidget(QWidget):
         net.add_edge(1, 3)
         net.add_edge(2, 4)
 
-        net.show("graph.html")
-        with open("graph.html", "r") as f:
+        net.show("temp/graph.html")
+        with open("temp/graph.html", "r") as f:
             html = f.read()
         self.web_view.setHtml(html)
 

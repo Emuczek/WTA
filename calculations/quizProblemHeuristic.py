@@ -3,8 +3,9 @@
 
 import copy
 import numpy as np
+from calculations.calculationInterface import CalculationInterface
 
-def calculate(data_path: str):
+def main(data_path: str):
     n = int(2)  # number of incoming targets (J[j] - [1,2, .. n])
     m = int(2)  # number of weapons (I[i] - [1,2, .. m])
 
@@ -157,4 +158,9 @@ def calculate(data_path: str):
                         p[i_second_high][j] = 0
                     # and GOTO 2.
 
-calculate("dupa")
+
+
+class CalculationQuizHeuristic(CalculationInterface):
+
+    def calculate(self, data_path: str):
+        return calculate(data_path)
