@@ -28,12 +28,12 @@ class GraphWidget(QWidget):
     def draw_graph(self):
         net = Network(notebook=True)
 
-        net.add_node(1, label='Node 1')
-        net.add_node(2, label='Node 2')
-        net.add_node(3, label='Node 3')
-        net.add_edge(1, 2)
+        net.add_node(1, label='Broń 1')
+        net.add_node(2, label='Broń 2')
+        net.add_node(3, label='Cel 1')
+        net.add_node(4, label='Cel 2')
         net.add_edge(1, 3)
-        net.add_edge(2, 3)
+        net.add_edge(2, 4)
 
         net.show("graph.html")
         with open("graph.html", "r") as f:
@@ -258,33 +258,6 @@ class MainWindow(QMainWindow):
         dock1.setWidget(wybor_widget)
 
         self.addDockWidget(Qt.LeftDockWidgetArea, dock1)
-
-        # dock2 = QDockWidget("Status przebiegu", self)
-        # dock2.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea | Qt.TopDockWidgetArea |
-        #                       Qt.BottomDockWidgetArea)
-        #
-        # some_layout = QVBoxLayout()
-        #
-        # table_widget = QTableWidget(3, 1)
-        # table_widget.setHorizontalHeaderLabels(["Wartość"])
-        #
-        # for row in range(3):
-        #     for column in range(3):
-        #         item = QTableWidgetItem(f"Item {row + 1}, {column + 1}")
-        #         table_widget.setItem(row, column, item)
-        #
-        # table_container = QWidget()
-        # layout = QVBoxLayout()
-        # layout.addWidget(table_widget)
-        # table_container.setLayout(layout)
-        #
-        # some_layout.addWidget(table_container)
-        #
-        # central_widget = QWidget()
-        # central_widget.setLayout(some_layout)
-        #
-        # dock2.setWidget(central_widget)
-        # self.addDockWidget(Qt.RightDockWidgetArea, dock2)
 
     def create_toolbars(self):
         toolbar2 = QToolBar("Secondary Toolbar")
