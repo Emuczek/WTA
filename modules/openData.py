@@ -35,4 +35,4 @@ def openData(data_path: str, binarize: bool):
         return m, n, v, w, p
 
 
-print(openData('C:/Users/Jakub/PycharmProjects/pythonProject/data/testInstance2x2.json', True))
+# print(openData('C:/Users/Jakub/PycharmProjects/pythonProject/data/testInstance2x2.json', True))
