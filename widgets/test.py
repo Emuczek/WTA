@@ -104,16 +104,16 @@ class MainWindow(QMainWindow):
         self.addDockWidget(Qt.RightDockWidgetArea, self.status_dock_widget)
 
 if __name__ == "__main__":
-    classs = CalculationQuizHeuristic()
-    classs.calculate('C:/Users/Jakub/PycharmProjects/pythonProject/data/testInstance2x2.json')
-    m, n, v, w, p = openData('C:/Users/Jakub/PycharmProjects/pythonProject/data/testInstance2x2.json', True)
-    print(objective(m, n, v, w, p,  [[0., 1.],
-                                     [0., 1.]]))
+    # classs = CalculationQuizHeuristic()
+    # classs.calculate('C:/Users/Jakub/PycharmProjects/pythonProject/data/testInstance2x2.json')
+    # m, n, v, w, p = openData('C:/Users/Jakub/PycharmProjects/pythonProject/data/testInstance2x2.json', True)
+    # print(objective(m, n, v, w, p,  [[0., 1., 0.],
+    #                                  [0., 0., 1.]]))
 
-    # app = QApplication(sys.argv)
-    # main_window = MainWindow()
-    # main_window.resize(600, 400)
-    # main_window.show()
-    # sys.exit(app.exec())
+    app = QApplication(sys.argv)
+    main_window = MainWindow()
+    main_window.resize(600, 400)
+    main_window.show()
+    sys.exit(app.exec())
 
 
