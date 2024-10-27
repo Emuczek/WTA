@@ -1,35 +1,31 @@
-import cplex
+from docplex.cp.model import CpoModel
+from docplex.cp.solver.solver import CpoSolver
 
-# Create an instance of a linear problem
-problem = cplex.Cplex()
+def solve_cpo_file(cpo_file_path):
+    try:
+        # Load the CPO model from the file
 
-# Set the objective function to maximization
-problem.objective.set_sense(problem.objective.sense.maximize)
+        model = CpoModel()
+        model.import_model(cpo_file_path)
 
-# Define variables (x and y) and add them to the problem
-variables = ["x", "y"]
-objective_coeffs = [3.0, 5.0]  # Coefficients for x and y in the objective function
-problem.variables.add(names=variables, obj=objective_coeffs, lb=[0.0, 0.0])  # Lower bounds set to 0 for x and ypi
+        # Create a CPO solver instance
+        solver = CpoSolver(model)
 
-# Define constraints
-# 1. x + 2y <= 6
-# 2. 3x + 2y <= 12
-constraints = [
-    [["x", "y"], [1.0, 2.0]],  # Coefficients for constraint 1
-    [["x", "y"], [3.0, 2.0]]   # Coefficients for constraint 2
-]
-rhs = [6.0, 12.0]  # Right-hand side values for each constraint
-constraint_senses = ["L", "L"]  # "L" stands for <=
+        # Solve the model
+        solution = solver.solve()
 
-# Add constraints to the problem
-problem.linear_constraints.add(lin_expr=constraints, senses=constraint_senses, rhs=rhs)
+        # Output results
+        if solution:
+            print("Solution found:")
+            print(f"Objective value = {solution.get_objective_value()}")
 
-# Solve the problem
-problem.solve()
+            # Get variable values
+            for var in solution.get_all_var_solutions():
+                print(f"Variable {var}")
+        else:
+            print("No solution found.")
+    except Exception as e:
+        print("An error occurred:", e)
 
-# Display the results
-print("Solution status:", problem.solution.get_status())
-print("Objective value:", problem.solution.get_objective_value())
-solution_values = problem.solution.get_values()
-for var_name, value in zip(variables, solution_values):
-    print(f"{var_name} = {value}")
+# Replace 'your_model.cpo' with the path to your CPO file
+solve_cpo_file('model.cpo')
