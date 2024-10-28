@@ -3,8 +3,9 @@
 
 import copy
 import numpy as np
-from modules.openData import openData
+from modules.openData import opendata
 from modules.calculationInterface import CalculationInterface
+
 
 def main(data_path: str):
     n = int()  # number of incoming targets (J[j] - [1,2, .. n])
@@ -58,7 +59,6 @@ def main(data_path: str):
         y = copy.deepcopy(y0)
         print(f"Y: {p}")
         print(f"Y: {y}")
-
 
         # 3. Set y(i1, j1) as the maximum value of y and y(i2, j2) as the second highest value of y.
 
@@ -119,7 +119,8 @@ def main(data_path: str):
 
             j_second_second = np.argmax(y_second_copy[i_second_high, :])
 
-            # 4.2 y(i1, j1) + y(i22, j22)  > y(i2, j2) + y(i11, j11)? DELETE: BTW, i11??? i think its supose to be i12, j12
+            # 4.2 y(i1, j1) + y(i22, j22)  > y(i2, j2) + y(i11, j11)?
+            # DELETE: BTW, i11??? i think its supose to be i12, j12
 
             if y_first_max + y_second_second > y_second_high + y_max_second:
                 var_x[i_first_max, j_first_max] = 1  # 5. Set choosen weapon in decision variable.
@@ -152,7 +153,6 @@ def main(data_path: str):
                     for j in range(n):
                         p[i_second_high][j] = 0
                     # and GOTO 2.
-
 
 
 class CalculationQuizHeuristic(CalculationInterface):

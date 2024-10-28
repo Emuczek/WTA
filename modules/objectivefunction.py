@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def objective(m, n, v, w, p, x_dvar):
     obj = 0
     for j in range(n):

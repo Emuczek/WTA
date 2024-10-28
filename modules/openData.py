@@ -4,13 +4,15 @@ import pandas as pd
 
 # 'C:/Users/Jakub/PycharmProjects/pythonProject/data/testInstance2x2.json'
 
-def explosionPrequel(n: int):
+
+def explosionprequel(n: int):
     if n > 1:
         return np.ones(n)
     else:
         return n
 
-def openData(data_path: str, binarize: bool):
+
+def opendata(data_path: str, binarize: bool):
     with open(data_path) as json_file:
         data = json.load(json_file)
 
@@ -27,11 +29,11 @@ def openData(data_path: str, binarize: bool):
             p = df['propabilities'].tolist()
             return len(p), len(p[0]), v, df['weaponsSupply'].astype(int).tolist(), p
         else:
-            m = data['weaponTypeCount'] # number of weapons
-            n = data['targetCount'] # number of incoming targets
-            v = data['targetWeights'] # number describing target importance
-            w = data['weaponsSupply'] # number of each weapon by weapon type
-            p = data['propabilities'] # propability of weapon type m of destroying target n
+            m = data['weaponTypeCount']  # number of weapons
+            n = data['targetCount']  # number of incoming targets
+            v = data['targetWeights']  # number describing target importance
+            w = data['weaponsSupply']  # number of each weapon by weapon type
+            p = data['propabilities']  # propability of weapon type m of destroying target n
         return m, n, v, w, p
 
 

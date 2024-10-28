@@ -1,5 +1,6 @@
 from abc import abstractmethod
 
+
 # Abstract class with calculate method for all calculation methods of WTA
 class CalculationInterface:
 
