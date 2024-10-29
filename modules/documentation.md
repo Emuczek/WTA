@@ -1,75 +1,69 @@
-# Weapon Target Assignment (WTA) Problem
+# Problem Przydziału Celów do Broni (WTA)
 
-The Weapon Target Assignment (WTA) problem is a classic optimization problem in operations research and military planning. It involves assigning a set of weapons to a set of targets in a way that maximizes the overall expected damage or minimizes the overall cost, subject to various constraints.
+Problem Przydziału Celów do Broni (ang. Weapon Target Assignment, WTA) to klasyczny problem optymalizacyjny w badaniach operacyjnych i planowaniu wojskowym. Polega on na przydzieleniu zestawu broni do zestawu celów w sposób, który maksymalizuje ogólne oczekiwane obrażenia lub minimalizuje ogólny koszt, z uwzględnieniem różnych ograniczeń.
 
-## Problem Description
+## Opis Problemu
 
-Imagine a scenario where you have a set of weapons (e.g., missiles, aircraft) and a set of targets (e.g., enemy installations, vehicles). Each weapon has a certain probability of destroying each target (this probability can depend on factors like the weapon's type, the target's vulnerability, and the distance between them).  The goal is to find the optimal assignment of weapons to targets that achieves the best overall outcome.
+Wyobraź sobie scenariusz, w którym masz zestaw broni (np. pociski, samoloty) i zestaw celów (np. instalacje wroga, pojazdy). Każda broń ma pewne prawdopodobieństwo zniszczenia każdego celu (prawdopodobieństwo to może zależeć od takich czynników, jak typ broni, podatność celu na zniszczenie i odległość między nimi). Celem jest znalezienie optymalnego przydziału broni do celów, który zapewni najlepszy ogólny wynik.
 
-## Objective Function
+## Funkcja Celu
 
-The objective function in a WTA problem typically represents the overall effectiveness of the assignment.  There are two common approaches:
+Funkcja celu w problemie WTA zazwyczaj reprezentuje ogólną skuteczność przydziału. Istnieją dwa powszechne podejścia:
 
-* **Maximize expected damage:**  This aims to inflict the most damage on the enemy. The objective function would be the sum of the expected damage dealt to each target, considering the probability of destruction for each weapon-target pair.
+* **Maksymalizacja oczekiwanych obrażeń:** Celem jest zadanie wrogowi jak największych obrażeń. Funkcja celu byłaby sumą oczekiwanych obrażeń zadanych każdemu celowi, biorąc pod uwagę prawdopodobieństwo zniszczenia dla każdej pary broń-cel.
 
-* **Minimize cost/resource usage:** This aims to achieve a desired level of damage while using the fewest resources possible. The objective function might be the sum of the costs of using each weapon, or a combination of cost and damage.
+* **Minimalizacja kosztów/zużycia zasobów:** Celem jest osiągnięcie pożądanego poziomu obrażeń przy jednoczesnym wykorzystaniu jak najmniejszej ilości zasobów. Funkcja celu może być sumą kosztów użycia każdej broni lub kombinacją kosztu i obrażeń.
 
-## Constraints
+## Ograniczenia
 
-Several constraints can be imposed on the WTA problem, including:
+W problemie WTA można nałożyć kilka ograniczeń, w tym:
 
-* **One-to-one assignment (or many-to-one if weapons can engage multiple targets):** Each weapon can be assigned to at most one target (in the basic formulation) or a limited number of targets (in more complex scenarios). Similarly, sometimes constraints are imposed on how many weapons can attack a single target.
-* **Limited resources:**  There might be a limited number of each type of weapon available.
-* **Target priorities:** Some targets might be more important than others, and the assignment should prioritize destroying high-value targets.
-* **Engagement time windows:** There might be specific time windows within which a target can be engaged.
-* **Constraints on attack routes/paths:**  In more realistic scenarios, constraints related to the trajectories of weapons or the availability of attack routes can be considered.
+* **Przydział jeden do jednego (lub wiele do jednego, jeśli broń może atakować wiele celów):** Każda broń może zostać przydzielona do co najwyżej jednego celu (w podstawowym sformułowaniu) lub ograniczonej liczby celów (w bardziej złożonych scenariuszach). Analogicznie, czasami nakłada się ograniczenia na to, ile broni może atakować jeden cel.
+* **Ograniczone zasoby:** Może istnieć ograniczona liczba każdego rodzaju dostępnej broni.
+* **Priorytety celów:** Niektóre cele mogą być ważniejsze niż inne, a przydział powinien priorytetyzować niszczenie celów o wysokiej wartości.
+* **Okna czasowe ataku:** Mogą istnieć określone okna czasowe, w których cel może zostać zaatakowany.
+* **Ograniczenia dotyczące tras/ścieżek ataku:** W bardziej realistycznych scenariuszach można uwzględnić ograniczenia związane z trajektoriami broni lub dostępnością tras ataku.
 
+## Sformułowanie Matematyczne (Przykłąd - Maksymalizacja Oczekiwanych Obrażeń)
 
-## Mathematical Formulation (Example - Maximize Expected Damage)
+Niech:
 
-Let:
-
-* `n` be the number of weapons.
-* `m` be the number of targets.
-* `p_ij` be the probability that weapon `i` destroys target `j`.
-* `v_j` be the value of target `j` (representing its importance).
-* `x_ij` be a binary decision variable: `x_ij = 1` if weapon `i` is assigned to target `j`, and `x_ij = 0` otherwise.
-
-
-**Objective Function (Maximize):**
-Use code with caution.
-Markdown
-Maximize ∑_(i=1)^n ∑_(j=1)^m p_ij * v_j * x_ij
-
-**Constraints:**
-
-* **Each weapon assigned to at most one target:**
-Use code with caution.
-∑_(j=1)^m x_ij <= 1, for all i = 1, ..., n
-
-* **Decision variables are binary:**
-Use code with caution.
-x_ij ∈ {0, 1}, for all i = 1, ..., n and j = 1, ..., m
-
-Other constraints, such as limited resources or target priorities, can be added as needed.
+* `n` będzie liczbą broni.
+* `m` będzie liczbą celów.
+* `p_ij` będzie prawdopodobieństwem, że broń `i` zniszczy cel `j`.
+* `v_j` będzie wartością celu `j` (reprezentującą jego ważność).
+* `x_ij` będzie binarną zmienną decyzyjną: `x_ij = 1`, jeśli broń `i` jest przypisana do celu `j`, a `x_ij = 0` w przeciwnym razie.
 
 
-## Solution Methods
+**Funkcja Celu (Maksymalizacja):**
 
-Various optimization techniques can be used to solve the WTA problem, including:
+Maksymalizuj  ∑_(i=1)^n ∑_(j=1)^m  p_ij * v_j * x_ij
 
-* **Integer Programming:** The mathematical formulation described above can be solved directly using integer programming solvers.
-* **Network Flow Algorithms:** The problem can be modeled as a network flow problem and solved using specialized algorithms.
-* **Heuristic and Metaheuristic Algorithms:** For larger or more complex instances, heuristic algorithms like genetic algorithms, simulated annealing, or tabu search can be used to find good solutions efficiently.
+**Ograniczenia:**
+
+* **Każda broń przypisana do co najwyżej jednego celu:**
+
+∑_(j=1)^m x_ij <= 1, dla wszystkich i = 1, ..., n
+
+* **Zmienne decyzyjne są binarne:**
+
+x_ij ∈ {0, 1}, dla wszystkich i = 1, ..., n i j = 1, ..., m
+
+Inne ograniczenia, takie jak ograniczone zasoby lub priorytety celów, można dodać w razie potrzeby.
 
 
-## Applications
+## Metody Rozwiązywania
 
-The WTA problem has applications in various domains, including:
+Do rozwiązania problemu WTA można wykorzystać różne techniki optymalizacyjne, w tym:
 
-* **Military planning and operations:** Assigning weapons to targets in combat scenarios.
-* **Missile defense:**  Intercepting incoming missiles.
-* **Resource allocation:** Assigning resources to tasks in general optimization problems.
+* **Programowanie całkowitoliczbowe:** Powyższe sformułowanie matematyczne można rozwiązać bezpośrednio za pomocą solverów programowania całkowitoliczbowego.
+* **Algorytmy przepływu w sieci:** Problem można modelować jako problem przepływu w sieci i rozwiązać za pomocą wyspecjalizowanych algorytmów.
+* **Algorytmy heurystyczne i metaheurystyczne:** W przypadku większych lub bardziej złożonych instancji, algorytmy heurystyczne, takie jak algorytmy genetyczne, symulowane wyżarzanie lub przeszukiwanie tabu, mogą być użyte do znalezienia dobrych rozwiązań w efektywny sposób.
 
+## Zastosowania
 
-This Markdown file provides a comprehensive overview of the Weapon Target Assignment problem, covering its description, objective function, constraints, mathematical formulation, solution methods, and applications.
+Problem WTA ma zastosowania w różnych dziedzinach, w tym:
+
+* **Planowanie i operacje wojskowe:** Przypisywanie broni do celów w scenariuszach bojowych.
+* **Obrona przeciwrakietowa:** Przechwytywanie nadlatujących pocisków.
+* **Alokacja zasobów:** Przypisywanie zasobów do zadań w ogólnych problemach optymalizacyjnych.

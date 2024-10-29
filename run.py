@@ -1,4 +1,5 @@
-from widgets.mainWidget import MainWidget
+from widgets.mainWidget import MainWindow
+from PySide6.QtWidgets import QApplication
 import sys
 from PySide6 import QtWidgets
 

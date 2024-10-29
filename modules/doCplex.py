@@ -2,7 +2,7 @@ from docplex.cp.model import *
 from docplex.cp.parameters import *
 from modules.openData import opendata
 
-m, n, V, w, p = opendata("D:/Studia/Praca_Inzynierska/ProjectPythonWTA/data/random_data.json", True)
+m, n, V, w, p = opendata("/data/testInstance50x50.json", True)
 
 mdl = CpoModel()
 

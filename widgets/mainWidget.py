@@ -1,4 +1,5 @@
-import sys, time
+import sys
+import time
 from PySide6.QtCore import Qt, Slot, QTimer
 from PySide6.QtWidgets import (QApplication, QComboBox, QDialog,
                                QDialogButtonBox, QGridLayout, QGroupBox,
@@ -38,6 +39,7 @@ class FilePicker(QWidget):
             print(f"Selected file: {selected_file}")
             # Do something with the selected file path, e.g., open it, process it, etc.
 
+
 class GraphWidget(QWidget):
     def __init__(self):
         super().__init__()
@@ -61,8 +63,8 @@ class GraphWidget(QWidget):
         net.add_edge(1, 3)
         net.add_edge(2, 4)
 
-        net.show("temp/graph.html")
-        with open("temp/graph.html", "r") as f:
+        net.show("widgets/temp/graph.html")
+        with open("widgets/temp/graph.html", "r") as f:
             html = f.read()
         self.web_view.setHtml(html)
 
@@ -254,12 +256,10 @@ class MainWindow(QMainWindow):
 
         # Exit QAction
         exit_action = QAction("Importuj dane z pliku .JSON", self)
-        exit_action.setShortcut(QKeySequence.Open)
         exit_action.setStatusTip("Kliknij tutaj, zaimportować plik .JSON")
         exit_action.triggered.connect(self.open_file_dialog)
 
         exi_action = QAction("Informacje na temat programu", self)
-        exi_action.setShortcut(QKeySequence.Open)
         exi_action.setStatusTip("Kliknij tutaj, aby dowiedzieć się wiecej")
         exi_action.triggered.connect(self.display_markdown)
 
@@ -328,7 +328,7 @@ class MainWindow(QMainWindow):
             # dock.setWidget(text_edit)
             # self.addDockWidget(Qt.RightDockWidgetArea, dock)  # Initial position
 
-            self.markdown_window.setWindowTitle("Markdown Content")
+            self.markdown_window.setWindowTitle("Informacje")
             layout = QVBoxLayout()  # Add layout to new window
             text_edit = QTextEdit()
             text_edit.setReadOnly(True)
@@ -352,9 +352,9 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
 
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    main = MainWindow()
-    main.setWindowTitle("Weapon target assingment solver")
-    main.show()
-    sys.exit(app.exec())
+# if __name__ == '__main__':
+#     app = QApplication(sys.argv)
+#     main = MainWindow()
+#     main.setWindowTitle("Weapon target assingment solver")
+#     main.show()
+#     sys.exit(app.exec())
