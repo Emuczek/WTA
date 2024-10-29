@@ -24,7 +24,7 @@ def opendata(data_path: str, binarize: bool):
             data.pop('targetCount')
             data.pop('targetWeights')
             df = pd.DataFrame.from_dict(data)
-            df['weaponsSupply'] = df['weaponsSupply'].apply(explosionPrequel)
+            df['weaponsSupply'] = df['weaponsSupply'].apply(explosionprequel)
             df = df.explode('weaponsSupply')
             p = df['propabilities'].tolist()
             return len(p), len(p[0]), v, df['weaponsSupply'].astype(int).tolist(), p
