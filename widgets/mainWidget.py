@@ -316,7 +316,7 @@ class MainWindow(QMainWindow):
 
     def display_markdown(self, filepath):
         try:
-            with open(self.markdown_filepath, 'r') as f:
+            with open(self.markdown_filepath, 'r', encoding='utf-8') as f:
                 markdown_text = f.read()
             html = markdown.markdown(markdown_text)
 
