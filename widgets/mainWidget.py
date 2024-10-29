@@ -189,15 +189,6 @@ class MainWindow(QMainWindow):
         button2.clicked.connect(self.open_dialog)
         toolbar2.addWidget(button2)
 
-    def open_file_dialog(self):
-        file_dialog = QFileDialog(self)
-        file_dialog.setFileMode(QFileDialog.ExistingFile)
-        file_dialog.setNameFilter("JSON files (*.json)")
-
-        if file_dialog.exec():
-            self.selected_file_path = file_dialog.selectedFiles()[0]
-            self.filepath_label.setText(f"Wybrany plik: {self.selected_file_path}")
-
     def display_markdown(self, filepath):
         try:
             with open(self.markdown_filepath, 'r', encoding='utf-8') as f:
