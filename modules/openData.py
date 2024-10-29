@@ -2,8 +2,6 @@ import json
 import numpy as np
 import pandas as pd
 
-# 'C:/Users/Jakub/PycharmProjects/pythonProject/data/testInstance2x2.json'
-
 
 def explosionprequel(n: int):
     if n > 1:
@@ -35,6 +33,3 @@ def opendata(data_path: str, binarize: bool):
             w = data['weaponsSupply']  # number of each weapon by weapon type
             p = data['propabilities']  # propability of weapon type m of destroying target n
         return m, n, v, w, p
-
-
-# print(openData('C:/Users/Jakub/PycharmProjects/pythonProject/data/testInstance2x2.json', True))
