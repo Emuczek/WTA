@@ -151,7 +151,7 @@ class MainWindow(QMainWindow):
         self.info_menu.addAction(exi_action)
 
         geometry = self.screen().availableGeometry()
-        self.setFixedSize(geometry.width() * 0.8, geometry.height() * 0.7)
+        self.setFixedSize(int(geometry.width() * 0.8), int(geometry.height() * 0.7))
 
     def create_dock_widgets(self):
         dock1 = QDockWidget("Wybór metody", self)
