@@ -114,8 +114,9 @@ class MainWindow(QMainWindow):
         # Dock widgets
         self.create_dock_widgets()
 
-
         # Toolbars
+        self.stop_calc_button = QPushButton("Zakończ obliczanie")
+        self.start_calc_button = QPushButton("Rozpocznij obliczanie")
         self.create_toolbars()
 
         self.status = self.statusBar()
@@ -180,14 +181,11 @@ class MainWindow(QMainWindow):
         start_stop_toolbar = QToolBar("startStopToolbar")
         self.addToolBar(Qt.TopToolBarArea, start_stop_toolbar)
 
-        start_calc_button = QPushButton("Rozpocznij obliczanie")
-        start_calc_button.clicked.connect(self.start_calculations)
+        self.start_calc_button.clicked.connect(self.start_calculations)
+        self.stop_calc_button.clicked.connect(self.stop_calculations)
 
-        stop_calc_button = QPushButton("Zakończ obliczanie")
-        stop_calc_button.clicked.connect(self.stop_calculations)
-
-        start_stop_toolbar.addWidget(start_calc_button)
-        start_stop_toolbar.addWidget(stop_calc_button)
+        start_stop_toolbar.addWidget(self.start_calc_button)
+        start_stop_toolbar.addWidget(self.stop_calc_button)
 
     def open_file_dialog(self):
         file_dialog = QFileDialog(self)
@@ -232,18 +230,18 @@ class MainWindow(QMainWindow):
 
         self.thread.start()
 
-        # self.start_button.setEnabled(False)
-        # self.stop_button.setEnabled(True)
+        self.start_calc_button.setEnabled(False)
+        self.stop_calc_button.setEnabled(True)
 
     def stop_calculations(self):
         self.worker.calc.stop = True
-        # self.start_button.setEnabled(True)
-        # self.stop_button.setEnabled(True)
+        self.start_calc_button.setEnabled(True)
+        self.stop_calc_button.setEnabled(True)
 
     def finished_calc(self, message):
         print(f"Finished, solve: {message}")
         self.status_dock_widget.value_label.setText(f"Wynik: {message}")
-        # self.start_button.setEnabled(True)
+        self.start_calc_button.setEnabled(True)
 
     def update_progress(self, message):
         self.status_dock_widget.value_label.setText(f"Aktualna wartość: {message}")
