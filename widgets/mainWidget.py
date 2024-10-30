@@ -216,7 +216,7 @@ class MainWindow(QMainWindow):
             self.markdown_window.setLayout(layout)  # Set layout on new window
             self.markdown_window.show()
             geometry = self.screen().availableGeometry()
-            self.markdown_window.setFixedSize(geometry.width() * 0.4, geometry.height() * 0.35)
+            self.markdown_window.setFixedSize(int(geometry.width() * 0.4), int(geometry.height() * 0.35))
 
         except Exception as e:
             print(f"Error opening or rendering markdown: {e}")
@@ -229,11 +229,3 @@ class MainWindow(QMainWindow):
     def open_dialog():
         dialog = Dialog()
         dialog.exec()
-
-
-# if __name__ == '__main__':
-#     app = QApplication(sys.argv)
-#     main = MainWindow()
-#     main.setWindowTitle("Weapon target assingment solver")
-#     main.show()
-#     sys.exit(app.exec())
