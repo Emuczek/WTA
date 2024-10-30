@@ -13,30 +13,23 @@ from PySide6.QtGui import QAction, QKeySequence
 from pyvis.network import Network
 import markdown
 from widgets.centralVisualization import GraphWidget
+from modules.quizProblemHeuristic import CalculationQuizHeuristic
 
 
 class Worker(QObject):
     finished = Signal()
-    progress = Signal(str)  # Signal to send updates
+    progress = Signal(str)
 
-    def __init__(self, algorithm_function):
+    def __init__(self):
         super().__init__()
-        self._isRunning = True
-        self.algorithm_function = algorithm_function
+        self.calc = CalculationQuizHeuristic()
 
+    def defstop(self):
+        self.calc.stop = True
 
     def run(self):
-        while self._isRunning:
-            # Replace this with your actual algorithm call
-            result = self.algorithm_function()
-            self.progress.emit(str(result))  # Emit the result or progress
-            time.sleep(1)  # Simulate some work
-
+        self.calc.calculate("data/testInstance2x2.json")
         self.finished.emit()
-
-
-    def stop(self):
-        self._isRunning = False
 
 
 class StatusDockWidget(QDockWidget):
@@ -110,6 +103,8 @@ class MainWindow(QMainWindow):
         self.status_dock_widget = StatusDockWidget()
         self.markdown_filepath = "modules/documentation.md"
         self.markdown_window = QWidget()
+        self.thread = None
+        self.worker = None
 
         # Central widget
 
@@ -186,10 +181,10 @@ class MainWindow(QMainWindow):
         self.addToolBar(Qt.TopToolBarArea, start_stop_toolbar)
 
         start_calc_button = QPushButton("Rozpocznij obliczanie")
-        start_calc_button.clicked.connect(self.status_dock_widget.start_processing)
+        start_calc_button.clicked.connect(self.start_calculations)
 
         stop_calc_button = QPushButton("Zakończ obliczanie")
-        stop_calc_button.clicked.connect(self.status_dock_widget.start_processing)
+        stop_calc_button.clicked.connect(self.stop_calculations)
 
         start_stop_toolbar.addWidget(start_calc_button)
         start_stop_toolbar.addWidget(stop_calc_button)
@@ -222,3 +217,33 @@ class MainWindow(QMainWindow):
 
         except Exception as e:
             self.filepath_label.setText(f"Błąd podczas otwierania pliku: {e}")
+
+    def start_calculations(self):
+        self.thread = QThread()
+        self.worker = Worker()  # Pass the algorithm
+        self.worker.moveToThread(self.thread)
+
+        self.thread.started.connect(self.worker.run)
+        self.worker.calc.finished.connect(self.thread.quit)
+        self.worker.calc.finished.connect(self.worker.deleteLater)
+        self.thread.finished.connect(self.thread.deleteLater)
+        self.worker.calc.emitProgress.connect(self.update_progress)
+        self.worker.calc.finished.connect(self.finished_calc)
+
+        self.thread.start()
+
+        # self.start_button.setEnabled(False)
+        # self.stop_button.setEnabled(True)
+
+    def stop_calculations(self):
+        self.worker.calc.stop = True
+        # self.start_button.setEnabled(True)
+        # self.stop_button.setEnabled(True)
+
+    def finished_calc(self, message):
+        print(f"Finished, solve: {message}")
+        self.status_dock_widget.value_label.setText(f"Wynik: {message}")
+        # self.start_button.setEnabled(True)
+
+    def update_progress(self, message):
+        self.status_dock_widget.value_label.setText(f"Aktualna wartość: {message}")
