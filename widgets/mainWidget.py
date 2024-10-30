@@ -1,6 +1,6 @@
 import sys
 import time
-from PySide6.QtCore import Qt, Slot, QTimer
+from PySide6.QtCore import Qt, Slot, QTimer, QThread, Signal, QObject
 from PySide6.QtWidgets import (QApplication, QComboBox, QDialog,
                                QDialogButtonBox, QGridLayout, QGroupBox,
                                QFormLayout, QHBoxLayout, QLabel, QLineEdit,
@@ -12,31 +12,31 @@ from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtGui import QAction, QKeySequence
 from pyvis.network import Network
 import markdown
+from widgets.centralVisualization import GraphWidget
 
 
-class GraphWidget(QWidget):
-    def __init__(self):
+class Worker(QObject):
+    finished = Signal()
+    progress = Signal(str)  # Signal to send updates
+
+    def __init__(self, algorithm_function):
         super().__init__()
-        self.layout = QVBoxLayout()
-        self.setLayout(self.layout)
-        self.web_view = QWebEngineView()
-        self.layout.addWidget(self.web_view)
-        self.draw_graph()
+        self._isRunning = True
+        self.algorithm_function = algorithm_function
 
-    def draw_graph(self):
-        net = Network(notebook=True)
 
-        net.add_node(1, label='Broń 1')
-        net.add_node(2, label='Broń 2')
-        net.add_node(3, label='Cel 1')
-        net.add_node(4, label='Cel 2')
-        net.add_edge(1, 3)
-        net.add_edge(2, 4)
+    def run(self):
+        while self._isRunning:
+            # Replace this with your actual algorithm call
+            result = self.algorithm_function()
+            self.progress.emit(str(result))  # Emit the result or progress
+            time.sleep(1)  # Simulate some work
 
-        net.show("widgets/temp/graph.html")
-        with open("widgets/temp/graph.html", "r") as f:
-            html = f.read()
-        self.web_view.setHtml(html)
+        self.finished.emit()
+
+
+    def stop(self):
+        self._isRunning = False
 
 
 class StatusDockWidget(QDockWidget):
@@ -44,6 +44,8 @@ class StatusDockWidget(QDockWidget):
         super().__init__("Informacje o przebiegu")
 
         # Centralny widget dla dock widgeta
+        self.progress_bar = QProgressBar()
+        self.current_value = None
         self.status_widget = QWidget()
         self.setWidget(self.status_widget)
 
@@ -60,8 +62,6 @@ class StatusDockWidget(QDockWidget):
         self.value_label = QLabel("Aktualna wartość: 0")
         layout.addWidget(self.value_label)
 
-        # Pasek postępu
-        self.progress_bar = QProgressBar()
         layout.addWidget(self.progress_bar)
 
         # Ustawiamy layout
@@ -71,9 +71,6 @@ class StatusDockWidget(QDockWidget):
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_time)
         self.elapsed_time = 0
-
-        # Inicjalizacja paska postępu
-        self.current_value = 0
 
     @Slot(name="processing")
     def start_processing(self):
@@ -108,50 +105,56 @@ class StatusDockWidget(QDockWidget):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.selected_file_path = str()
-        self.markdown_filepath = "modules/documentation.md"
 
-        # Ustawienie centralnego widgetu na wykres grafu
-        self.markdown_window = QWidget()  # Create a new window
+        self.selected_file_path = str()
+        self.status_dock_widget = StatusDockWidget()
+        self.markdown_filepath = "modules/documentation.md"
+        self.markdown_window = QWidget()
+
+        # Central widget
+
         self.central_widget = GraphWidget()
         self.setCentralWidget(self.central_widget)
 
-        # Tworzenie dock widgetów
+        # Dock widgets
         self.create_dock_widgets()
-        self.status_dock_widget = StatusDockWidget()
-        self.addDockWidget(Qt.BottomDockWidgetArea, self.status_dock_widget)
 
-        # Tworzenie toolbara
+
+        # Toolbars
         self.create_toolbars()
 
         self.status = self.statusBar()
         self.status.showMessage("Witamy!")
 
-        # Menu
-        self.menubar = QMenuBar()
-        self.layout().setMenuBar(self.menubar)  # Set layout before adding menubar
-        self.file_menu = self.menubar.addMenu("Wczytywanie danych")
-        self.info_menu = self.menubar.addMenu("Informacje")
+        # Menus
 
-        self.statusbar = QStatusBar(self)
-        self.filepath_label = QLabel("Brak wybranego pliku z danymi")
-        self.statusbar.addWidget(self.filepath_label)
-        self.setStatusBar(self.statusbar)  # Use setStatusBar()
-
-        # Exit QAction
-        exit_action = QAction("Importuj dane z pliku .JSON", self)
-        exit_action.setStatusTip("Kliknij tutaj, zaimportować plik .JSON")
-        exit_action.triggered.connect(self.open_file_dialog)
-
-        exi_action = QAction("Informacje na temat programu", self)
-        exi_action.setStatusTip("Kliknij tutaj, aby dowiedzieć się wiecej")
-        exi_action.triggered.connect(self.display_markdown)
-
-        self.file_menu.addAction(exit_action)
-        self.info_menu.addAction(exi_action)
+        self.create_menus(self)
 
         geometry = self.screen().availableGeometry()
         self.setFixedSize(int(geometry.width() * 0.8), int(geometry.height() * 0.7))
+
+    @staticmethod
+    def create_menus(self):
+        self.menubar = QMenuBar()
+        self.layout().setMenuBar(self.menubar)
+        self.file_menu = self.menubar.addMenu("Wczytywanie danych")
+        self.info_menu = self.menubar.addMenu("Informacje")
+
+        self.statusbar = QStatusBar()
+        self.filepath_label = QLabel("Brak wybranego pliku z danymi")
+        self.statusbar.addWidget(self.filepath_label)
+        self.setStatusBar(self.statusbar)
+
+        import_action = QAction("Importuj dane z pliku .JSON", self)
+        import_action.setStatusTip("Kliknij tutaj, zaimportować plik .JSON")
+        import_action.triggered.connect(self.open_file_dialog)
+
+        documentation_action = QAction("Informacje na temat programu", self)
+        documentation_action.setStatusTip("Kliknij tutaj, aby dowiedzieć się wiecej")
+        documentation_action.triggered.connect(self.display_markdown)
+
+        self.file_menu.addAction(import_action)
+        self.info_menu.addAction(documentation_action)
 
     def create_dock_widgets(self):
         dock1 = QDockWidget("Wybór metody", self)
@@ -160,11 +163,11 @@ class MainWindow(QMainWindow):
 
         layout_wybor = QVBoxLayout()
         heuristic_button = QPushButton("Heurystyka 'TabuSearch'")
-        heuristic_button.clicked.connect(self.open_dialog)
+        heuristic_button.clicked.connect(self.status_dock_widget.start_processing)
         linapprox_button = QPushButton("Aproksymacja liniowa")
-        linapprox_button.clicked.connect(self.open_dialog)
+        linapprox_button.clicked.connect(self.status_dock_widget.start_processing)
         qubo_button = QPushButton("Kwantowe wyżarzanie")
-        qubo_button.clicked.connect(self.open_dialog)
+        qubo_button.clicked.connect(self.status_dock_widget.start_processing)
 
         layout_wybor.addWidget(heuristic_button)
         layout_wybor.addWidget(linapprox_button)
@@ -176,23 +179,26 @@ class MainWindow(QMainWindow):
         dock1.setWidget(wybor_widget)
 
         self.addDockWidget(Qt.LeftDockWidgetArea, dock1)
+        self.addDockWidget(Qt.BottomDockWidgetArea, self.status_dock_widget)
 
     def create_toolbars(self):
-        toolbar2 = QToolBar("Secondary Toolbar")
-        self.addToolBar(Qt.TopToolBarArea, toolbar2)
+        start_stop_toolbar = QToolBar("startStopToolbar")
+        self.addToolBar(Qt.TopToolBarArea, start_stop_toolbar)
 
-        button1 = QPushButton("Rozpocznij obliczanie")
-        button1.clicked.connect(self.status_dock_widget.start_processing)
-        toolbar2.addWidget(button1)
+        start_calc_button = QPushButton("Rozpocznij obliczanie")
+        start_calc_button.clicked.connect(self.status_dock_widget.start_processing)
 
-        button2 = QPushButton("Zakończ obliczanie")
-        button2.clicked.connect(self.open_dialog)
-        toolbar2.addWidget(button2)
+        stop_calc_button = QPushButton("Zakończ obliczanie")
+        stop_calc_button.clicked.connect(self.status_dock_widget.start_processing)
+
+        start_stop_toolbar.addWidget(start_calc_button)
+        start_stop_toolbar.addWidget(stop_calc_button)
 
     def open_file_dialog(self):
         file_dialog = QFileDialog(self)
         file_dialog.setFileMode(QFileDialog.ExistingFile)
         file_dialog.setNameFilter("JSON files (*.json)")
+
         if file_dialog.exec():
             self.selected_file_path = file_dialog.selectedFiles()[0]
             self.filepath_label.setText(f"Wybrany plik: {self.selected_file_path}")
@@ -203,37 +209,16 @@ class MainWindow(QMainWindow):
                 markdown_text = f.read()
             html = markdown.markdown(markdown_text)
 
-            # Documentation as dock widget
-
-            # dock = QDockWidget("Information", self)  # Dock title is the file path
-            # dock.setAllowedAreas(Qt.AllDockWidgetAreas)
-            # text_edit = QTextEdit()
-            # text_edit.setReadOnly(True)  # Make the content read-only
-            # text_edit.setHtml(html)
-            # dock.setWidget(text_edit)
-            # self.addDockWidget(Qt.RightDockWidgetArea, dock)  # Initial position
-
-            # Documentation as pop window
-
             self.markdown_window.setWindowTitle("Informacje")
-            layout = QVBoxLayout()  # Add layout to new window
+            layout = QVBoxLayout()
             text_edit = QTextEdit()
             text_edit.setReadOnly(True)
             text_edit.setHtml(html)
             layout.addWidget(text_edit)
-            self.markdown_window.setLayout(layout)  # Set layout on new window
+            self.markdown_window.setLayout(layout)
             self.markdown_window.show()
             geometry = self.screen().availableGeometry()
             self.markdown_window.setFixedSize(int(geometry.width() * 0.4), int(geometry.height() * 0.35))
 
         except Exception as e:
-            print(f"Error opening or rendering markdown: {e}")
-
-    @Slot()
-    def action_triggered(self):
-        print("Action triggered!")
-
-    @staticmethod
-    def open_dialog():
-        dialog = Dialog()
-        dialog.exec()
+            self.filepath_label.setText(f"Błąd podczas otwierania pliku: {e}")
