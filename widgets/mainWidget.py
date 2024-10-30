@@ -109,7 +109,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.selected_file_path = str()
-        self.markdown_filepath = "D:/Studia/Praca_Inzynierska/ProjectPythonWTA/modules/documentation.md"
+        self.markdown_filepath = "modules/documentation.md"
 
         # Ustawienie centralnego widgetu na wykres grafu
         self.markdown_window = QWidget()  # Create a new window
@@ -188,6 +188,14 @@ class MainWindow(QMainWindow):
         button2 = QPushButton("Zakończ obliczanie")
         button2.clicked.connect(self.open_dialog)
         toolbar2.addWidget(button2)
+
+    def open_file_dialog(self):
+        file_dialog = QFileDialog(self)
+        file_dialog.setFileMode(QFileDialog.ExistingFile)
+        file_dialog.setNameFilter("JSON files (*.json)")
+        if file_dialog.exec():
+            self.selected_file_path = file_dialog.selectedFiles()[0]
+            self.filepath_label.setText(f"Wybrany plik: {self.selected_file_path}")
 
     def display_markdown(self, filepath):
         try:
