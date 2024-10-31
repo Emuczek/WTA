@@ -5,3 +5,5 @@
 /widgets/temp/graph.html
 /lib/
 /venv/
+*.pyc
+*.pyo
