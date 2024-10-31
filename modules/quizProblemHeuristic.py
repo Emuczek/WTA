@@ -61,8 +61,6 @@ class CalculationQuizHeuristic(CalculationInterface):
 
             self.emitProgress.emit(str(var_x))
 
-            time.sleep(5)
-
             if self.stop:
                 self.finished.emit(str(var_x))
                 return var_x

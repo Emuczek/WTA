@@ -20,15 +20,16 @@ class Worker(QObject):
     finished = Signal()
     progress = Signal(str)
 
-    def __init__(self):
+    def __init__(self, file_path):
         super().__init__()
         self.calc = CalculationQuizHeuristic()
+        self.current_file_path = file_path
 
     def defstop(self):
         self.calc.stop = True
 
     def run(self):
-        self.calc.calculate("data/testInstance2x2.json")
+        self.calc.calculate(self.current_file_path)
         self.finished.emit()
 
 
@@ -96,6 +97,9 @@ class StatusDockWidget(QDockWidget):
 
 
 class MainWindow(QMainWindow):
+
+    file_path = Signal(str())
+
     def __init__(self):
         super().__init__()
 
@@ -218,7 +222,7 @@ class MainWindow(QMainWindow):
 
     def start_calculations(self):
         self.thread = QThread()
-        self.worker = Worker()  # Pass the algorithm
+        self.worker = Worker(self.selected_file_path)
         self.worker.moveToThread(self.thread)
 
         self.thread.started.connect(self.worker.run)
