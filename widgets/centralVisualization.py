@@ -15,8 +15,15 @@ import markdown
 
 
 class GraphWidget(QWidget):
-    def __init__(self):
+    def __init__(self, data):
         super().__init__()
+        self.data_x = data
+        if len(self.data_x) > 0:
+            self.m = len(self.data_x)
+            self.n = len(self.data_x[0])
+        else:
+            self.m = 0
+            self.n = 0
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
         self.web_view = QWebEngineView()
@@ -26,12 +33,16 @@ class GraphWidget(QWidget):
     def draw_graph(self):
         net = Network(notebook=True)
 
-        net.add_node(1, label='Broń 1')
-        net.add_node(2, label='Broń 2')
-        net.add_node(3, label='Cel 1')
-        net.add_node(4, label='Cel 2')
-        net.add_edge(1, 3)
-        net.add_edge(2, 4)
+        for x in range(self.m):
+            net.add_node(x, label=f"Broń {x}")
+
+        for x in range(self.m, self.m+self.n):
+            net.add_node(x, label=f"Cel {x-self.m}")
+
+        for i in range(self.m):
+            for j in range(self.n):
+                if self.data_x[i][j] == 1:
+                    net.add_edge(i, j+self.m)
 
         net.show("widgets/temp/graph.html")
         with open("widgets/temp/graph.html", "r") as f:

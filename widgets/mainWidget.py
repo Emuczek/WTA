@@ -12,13 +12,14 @@ from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtGui import QAction, QKeySequence
 from pyvis.network import Network
 import markdown
+
+from modules.objectivefunction import objective
 from widgets.centralVisualization import GraphWidget
 from modules.quizProblemHeuristic import CalculationQuizHeuristic
 
 
 class Worker(QObject):
     finished = Signal()
-    progress = Signal(str)
 
     def __init__(self, file_path):
         super().__init__()
@@ -49,7 +50,7 @@ class StatusDockWidget(QDockWidget):
         layout.addStretch(0)
 
         # Etykieta do wyświetlania czasu
-        self.time_label = QLabel("Czas: 0 s")
+        self.time_label = QLabel("Czas: 0.375s")
         layout.addWidget(self.time_label)
 
         # Etykieta do wyświetlania aktualnej wartości
@@ -112,7 +113,7 @@ class MainWindow(QMainWindow):
 
         # Central widget
 
-        self.central_widget = GraphWidget()
+        self.central_widget = GraphWidget([])
         self.setCentralWidget(self.central_widget)
 
         # Dock widgets
@@ -243,9 +244,11 @@ class MainWindow(QMainWindow):
         self.stop_calc_button.setEnabled(True)
 
     def finished_calc(self, message):
+        self.central_widget = GraphWidget(message)
+        self.setCentralWidget(self.central_widget)
         print(f"Finished, solve: {message}")
-        self.status_dock_widget.value_label.setText(f"Wynik: {message}")
+        self.status_dock_widget.value_label.setText(f"Wynik: {objective(self.selected_file_path, message)}")
         self.start_calc_button.setEnabled(True)
 
     def update_progress(self, message):
-        self.status_dock_widget.value_label.setText(f"Aktualna wartość: {message}")
+        self.status_dock_widget.value_label.setText(f"Aktualna wartość: {objective(self.selected_file_path, message)}")

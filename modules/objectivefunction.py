@@ -1,7 +1,9 @@
 import numpy as np
+from modules.openData import opendata
 
 
-def objective(m, n, v, w, p, x_dvar):
+def objective(file_path, x_dvar):
+    m, n, v, w, p = opendata(file_path, True)
     obj = 0
     for j in range(n):
         temp = 0
