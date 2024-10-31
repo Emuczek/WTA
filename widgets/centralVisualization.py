@@ -34,10 +34,10 @@ class GraphWidget(QWidget):
         net = Network(notebook=True)
 
         for x in range(self.m):
-            net.add_node(x, label=f"Broń {x}")
+            net.add_node(x, label=f"Broń {x}", color="green")
 
         for x in range(self.m, self.m+self.n):
-            net.add_node(x, label=f"Cel {x-self.m}")
+            net.add_node(x, label=f"Cel {x-self.m}", color="red")
 
         for i in range(self.m):
             for j in range(self.n):
