@@ -33,77 +33,61 @@ class Worker(QObject):
         self.calc.calculate(self.current_file_path)
         self.finished.emit()
 
+class StopwatchWorker(QObject):
+    time_updated = Signal(str)
+    finished = Signal()
+
+    def __init__(self):
+        super().__init__()
+        self.timer = QTimer(self)
+        self.timer.setInterval(100)
+        self.timer.timeout.connect(self.update_time)
+        self.start_time = None
+        self.elapsed_time = 0
+        print("stopwatch init")
+
+    def start(self):
+        self.start_time = time.time()
+        self.timer.start()
+        print("Started!")
+
+    def stop(self):
+        self.timer.stop()
+        self.finished.emit()
+        print("Stopped!")
+
+    def update_time(self):
+        self.elapsed_time = str(round(float(time.time() - self.start_time),3))
+        print(self.elapsed_time)
+        self.time_updated.emit(self.elapsed_time)
+
 
 class StatusDockWidget(QDockWidget):
     def __init__(self):
         super().__init__("Informacje o przebiegu")
 
-        # Centralny widget dla dock widgeta
-        self.progress_bar = QProgressBar()
         self.current_value = None
         self.status_widget = QWidget()
         self.setWidget(self.status_widget)
 
-        # Layout
         layout = QVBoxLayout()
-
         layout.addStretch(0)
-
-        # Etykieta do wyświetlania czasu
-        self.time_label = QLabel("Czas: 0.375s")
+        self.time_label = QLabel("Czas: 0s")
         layout.addWidget(self.time_label)
-
-        # Etykieta do wyświetlania aktualnej wartości
         self.value_label = QLabel("Aktualna wartość: 0")
         layout.addWidget(self.value_label)
-
-        layout.addWidget(self.progress_bar)
-
-        # Ustawiamy layout
         self.status_widget.setLayout(layout)
-
-        # Timer do aktualizacji czasu
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.update_time)
-        self.elapsed_time = 0
-
-    @Slot(name="processing")
-    def start_processing(self):
-        self.elapsed_time = 0
-        self.current_value = 0
-        self.progress_bar.setValue(0)
-        self.timer.start(1000)  # Aktualizacja co sekundę
-
-        # Symulacja obliczeń
-        self.simulate_processing()
-
-    def update_time(self):
-        self.elapsed_time += 1
-        self.time_label.setText(f"Czas: {self.elapsed_time} s")
-
-        # Zaktualizuj aktualną wartość i pasek postępu
-        self.current_value += 0.1  # Przykładowa aktualizacja
-        if self.current_value > 100:
-            self.current_value = 100
-
-        self.value_label.setText(f"Aktualna wartość: {self.current_value}")
-        self.progress_bar.setValue(self.current_value)
-
-    def simulate_processing(self):
-        # Funkcja symulująca długotrwałe obliczenia
-        while self.current_value < 100:
-            time.sleep(0.01)  # Symuluj opóźnienie
-            self.update_time()  # Aktualizuj stan na dock widget
-        self.timer.stop()
 
 
 class MainWindow(QMainWindow):
 
-    file_path = Signal(str())
+    file_path = Signal(str)
 
     def __init__(self):
         super().__init__()
 
+        self.stopwatch_thread = None
+        self.stopwatch_worker = None
         self.selected_file_path = str()
         self.status_dock_widget = StatusDockWidget()
         self.markdown_filepath = "modules/documentation.md"
@@ -164,11 +148,11 @@ class MainWindow(QMainWindow):
 
         layout_wybor = QVBoxLayout()
         heuristic_button = QPushButton("Heurystyka 'TabuSearch'")
-        heuristic_button.clicked.connect(self.status_dock_widget.start_processing)
+        #heuristic_button.clicked.connect(self.status_dock_widget.start_processing)
         linapprox_button = QPushButton("Aproksymacja liniowa")
-        linapprox_button.clicked.connect(self.status_dock_widget.start_processing)
+        #linapprox_button.clicked.connect(self.status_dock_widget.start_processing)
         qubo_button = QPushButton("Kwantowe wyżarzanie")
-        qubo_button.clicked.connect(self.status_dock_widget.start_processing)
+        #qubo_button.clicked.connect(self.status_dock_widget.start_processing)
 
         layout_wybor.addWidget(heuristic_button)
         layout_wybor.addWidget(linapprox_button)
@@ -223,8 +207,11 @@ class MainWindow(QMainWindow):
 
     def start_calculations(self):
         self.thread = QThread()
+        self.stopwatch_thread = QThread()
         self.worker = Worker(self.selected_file_path)
+        self.stopwatch_worker = StopwatchWorker()
         self.worker.moveToThread(self.thread)
+        self.stopwatch_worker.moveToThread(self.stopwatch_thread)
 
         self.thread.started.connect(self.worker.run)
         self.worker.calc.finished.connect(self.thread.quit)
@@ -233,7 +220,13 @@ class MainWindow(QMainWindow):
         self.worker.calc.emitProgress.connect(self.update_progress)
         self.worker.calc.finished.connect(self.finished_calc)
 
+        self.stopwatch_thread.started.connect(self.stopwatch_worker.start)  # Start stopwatch
+        self.stopwatch_worker.time_updated.connect(lambda t: self.status_dock_widget.time_label.setText(f"Czas: {t}s"))
+        self.stopwatch_worker.finished.connect(self.stopwatch_thread.quit)
+        self.stopwatch_thread.finished.connect(self.stopwatch_thread.deleteLater)  # Cleanup
+
         self.thread.start()
+        self.stopwatch_thread.start()
 
         self.start_calc_button.setEnabled(False)
         self.stop_calc_button.setEnabled(True)
@@ -244,11 +237,12 @@ class MainWindow(QMainWindow):
         self.stop_calc_button.setEnabled(True)
 
     def finished_calc(self, message):
+        self.stopwatch_worker.stop()
         self.central_widget = GraphWidget(message)
         self.setCentralWidget(self.central_widget)
         print(f"Finished, solve: {message}")
-        self.status_dock_widget.value_label.setText(f"Wynik: {objective(self.selected_file_path, message)}")
+        self.status_dock_widget.value_label.setText(f"Wynik: {round(objective(self.selected_file_path, message),3)}")
         self.start_calc_button.setEnabled(True)
 
     def update_progress(self, message):
-        self.status_dock_widget.value_label.setText(f"Aktualna wartość: {objective(self.selected_file_path, message)}")
+        self.status_dock_widget.value_label.setText(f"Aktualna wartość: {round(objective(self.selected_file_path, message),3)}")
