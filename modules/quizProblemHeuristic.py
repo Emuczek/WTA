@@ -11,8 +11,8 @@ import time
 
 class CalculationQuizHeuristic(CalculationInterface):
 
-    emitProgress = Signal(str)
-    finished = Signal(str)
+    emitProgress = Signal(list)
+    finished = Signal(list)
 
     def __init__(self):
         super().__init__()
@@ -59,12 +59,10 @@ class CalculationQuizHeuristic(CalculationInterface):
 
         while True:
 
-            self.emitProgress.emit(str(var_x))
-
-            time.sleep(5)
+            self.emitProgress.emit(var_x)
 
             if self.stop:
-                self.finished.emit(str(var_x))
+                self.finished.emit(var_x)
                 return var_x
 
             # 2. Build value array y
@@ -103,7 +101,7 @@ class CalculationQuizHeuristic(CalculationInterface):
 
             if self.stop:
                 # print(f"Terminate, solve: \n {var_x}")
-                self.finished.emit(str(var_x))
+                self.finished.emit(var_x)
                 return var_x
 
             if i_first_max == i_second_high:
@@ -116,7 +114,7 @@ class CalculationQuizHeuristic(CalculationInterface):
 
                 if k == m:  # k = n?
                     # print(f"Terminate, solve: \n {var_x}")
-                    self.finished.emit(str(var_x))
+                    self.finished.emit(var_x)
                     return var_x
 
                 else:
@@ -154,7 +152,7 @@ class CalculationQuizHeuristic(CalculationInterface):
 
                     if k == m:  # k = n?
                         # print(f"Terminate, solve: \n {var_x}")
-                        self.finished.emit(str(var_x))
+                        self.finished.emit(var_x)
                         return var_x
 
                     else:
@@ -171,7 +169,7 @@ class CalculationQuizHeuristic(CalculationInterface):
 
                     if k == m:  # k = n?
                         # print(f"Terminate, solve: \n {var_x}")
-                        self.finished.emit(str(var_x))
+                        self.finished.emit(var_x)
                         return var_x
 
                     else:

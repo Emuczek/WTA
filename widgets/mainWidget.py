@@ -12,23 +12,25 @@ from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtGui import QAction, QKeySequence
 from pyvis.network import Network
 import markdown
+
+from modules.objectivefunction import objective
 from widgets.centralVisualization import GraphWidget
 from modules.quizProblemHeuristic import CalculationQuizHeuristic
 
 
 class Worker(QObject):
     finished = Signal()
-    progress = Signal(str)
 
-    def __init__(self):
+    def __init__(self, file_path):
         super().__init__()
         self.calc = CalculationQuizHeuristic()
+        self.current_file_path = file_path
 
     def defstop(self):
         self.calc.stop = True
 
     def run(self):
-        self.calc.calculate("data/testInstance2x2.json")
+        self.calc.calculate(self.current_file_path)
         self.finished.emit()
 
 
@@ -48,7 +50,7 @@ class StatusDockWidget(QDockWidget):
         layout.addStretch(0)
 
         # Etykieta do wyświetlania czasu
-        self.time_label = QLabel("Czas: 0 s")
+        self.time_label = QLabel("Czas: 0.375s")
         layout.addWidget(self.time_label)
 
         # Etykieta do wyświetlania aktualnej wartości
@@ -96,6 +98,9 @@ class StatusDockWidget(QDockWidget):
 
 
 class MainWindow(QMainWindow):
+
+    file_path = Signal(str())
+
     def __init__(self):
         super().__init__()
 
@@ -108,14 +113,15 @@ class MainWindow(QMainWindow):
 
         # Central widget
 
-        self.central_widget = GraphWidget()
+        self.central_widget = GraphWidget([])
         self.setCentralWidget(self.central_widget)
 
         # Dock widgets
         self.create_dock_widgets()
 
-
         # Toolbars
+        self.stop_calc_button = QPushButton("Zakończ obliczanie")
+        self.start_calc_button = QPushButton("Rozpocznij obliczanie")
         self.create_toolbars()
 
         self.status = self.statusBar()
@@ -180,14 +186,11 @@ class MainWindow(QMainWindow):
         start_stop_toolbar = QToolBar("startStopToolbar")
         self.addToolBar(Qt.TopToolBarArea, start_stop_toolbar)
 
-        start_calc_button = QPushButton("Rozpocznij obliczanie")
-        start_calc_button.clicked.connect(self.start_calculations)
+        self.start_calc_button.clicked.connect(self.start_calculations)
+        self.stop_calc_button.clicked.connect(self.stop_calculations)
 
-        stop_calc_button = QPushButton("Zakończ obliczanie")
-        stop_calc_button.clicked.connect(self.stop_calculations)
-
-        start_stop_toolbar.addWidget(start_calc_button)
-        start_stop_toolbar.addWidget(stop_calc_button)
+        start_stop_toolbar.addWidget(self.start_calc_button)
+        start_stop_toolbar.addWidget(self.stop_calc_button)
 
     def open_file_dialog(self):
         file_dialog = QFileDialog(self)
@@ -220,7 +223,7 @@ class MainWindow(QMainWindow):
 
     def start_calculations(self):
         self.thread = QThread()
-        self.worker = Worker()  # Pass the algorithm
+        self.worker = Worker(self.selected_file_path)
         self.worker.moveToThread(self.thread)
 
         self.thread.started.connect(self.worker.run)
@@ -232,18 +235,20 @@ class MainWindow(QMainWindow):
 
         self.thread.start()
 
-        # self.start_button.setEnabled(False)
-        # self.stop_button.setEnabled(True)
+        self.start_calc_button.setEnabled(False)
+        self.stop_calc_button.setEnabled(True)
 
     def stop_calculations(self):
         self.worker.calc.stop = True
-        # self.start_button.setEnabled(True)
-        # self.stop_button.setEnabled(True)
+        self.start_calc_button.setEnabled(True)
+        self.stop_calc_button.setEnabled(True)
 
     def finished_calc(self, message):
+        self.central_widget = GraphWidget(message)
+        self.setCentralWidget(self.central_widget)
         print(f"Finished, solve: {message}")
-        self.status_dock_widget.value_label.setText(f"Wynik: {message}")
-        # self.start_button.setEnabled(True)
+        self.status_dock_widget.value_label.setText(f"Wynik: {objective(self.selected_file_path, message)}")
+        self.start_calc_button.setEnabled(True)
 
     def update_progress(self, message):
-        self.status_dock_widget.value_label.setText(f"Aktualna wartość: {message}")
+        self.status_dock_widget.value_label.setText(f"Aktualna wartość: {objective(self.selected_file_path, message)}")
