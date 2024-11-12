@@ -147,16 +147,16 @@ class MainWindow(QMainWindow):
                               Qt.BottomDockWidgetArea)
 
         layout_wybor = QVBoxLayout()
-        heuristic_button = QPushButton("Heurystyka 'TabuSearch'")
-        #heuristic_button.clicked.connect(self.status_dock_widget.start_processing)
+        constraint_button = QPushButton("Programowanie ogarniczeń")
         linapprox_button = QPushButton("Aproksymacja liniowa")
-        #linapprox_button.clicked.connect(self.status_dock_widget.start_processing)
-        qubo_button = QPushButton("Kwantowe wyżarzanie")
-        #qubo_button.clicked.connect(self.status_dock_widget.start_processing)
+        heuristic_fire_button = QPushButton("Heurystyka 'Fire Hawk Optimizer'")
+        heuristic_quiz_button = QPushButton("Heurystyka 'Quiz Problem Heuristic'")
+        # heuristic_button.clicked.connect(self.status_dock_widget.start_processing)
 
-        layout_wybor.addWidget(heuristic_button)
+        layout_wybor.addWidget(constraint_button)
         layout_wybor.addWidget(linapprox_button)
-        layout_wybor.addWidget(qubo_button)
+        layout_wybor.addWidget(heuristic_fire_button)
+        layout_wybor.addWidget(heuristic_quiz_button)
         layout_wybor.addStretch(0)
 
         wybor_widget = QWidget()
@@ -173,6 +173,9 @@ class MainWindow(QMainWindow):
         self.start_calc_button.clicked.connect(self.start_calculations)
         self.stop_calc_button.clicked.connect(self.stop_calculations)
 
+        self.start_calc_button.setEnabled(False)
+        self.stop_calc_button.setEnabled(False)
+
         start_stop_toolbar.addWidget(self.start_calc_button)
         start_stop_toolbar.addWidget(self.stop_calc_button)
 
@@ -184,6 +187,8 @@ class MainWindow(QMainWindow):
         if file_dialog.exec():
             self.selected_file_path = file_dialog.selectedFiles()[0]
             self.filepath_label.setText(f"Wybrany plik: {self.selected_file_path}")
+
+        self.start_calc_button.setEnabled(True)
 
     def display_markdown(self, filepath):
         try:
