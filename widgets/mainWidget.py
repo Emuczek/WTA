@@ -33,6 +33,7 @@ class Worker(QObject):
         self.calc.calculate(self.current_file_path)
         self.finished.emit()
 
+
 class StopwatchWorker(QObject):
     time_updated = Signal(str)
     finished = Signal()
@@ -57,7 +58,7 @@ class StopwatchWorker(QObject):
         print("Stopped!")
 
     def update_time(self):
-        self.elapsed_time = str(round(float(time.time() - self.start_time),3))
+        self.elapsed_time = str(round(float(time.time() - self.start_time), 3))
         print(self.elapsed_time)
         self.time_updated.emit(self.elapsed_time)
 
@@ -250,4 +251,5 @@ class MainWindow(QMainWindow):
         self.start_calc_button.setEnabled(True)
 
     def update_progress(self, message):
-        self.status_dock_widget.value_label.setText(f"Aktualna wartość: {round(objective(self.selected_file_path, message),3)}")
+        self.status_dock_widget.value_label.setText(f"Aktualna wartość:"
+                                                    f" {round(objective(self.selected_file_path, message),3)}")
