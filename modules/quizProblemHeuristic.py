@@ -59,7 +59,7 @@ class CalculationQuizHeuristic(CalculationInterface):
 
         while True:
 
-            time.sleep(0.1)
+            time.sleep(0.01)
 
             self.emitProgress.emit(var_x)
 
