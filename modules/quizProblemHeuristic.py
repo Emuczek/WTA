@@ -180,3 +180,4 @@ class CalculationQuizHeuristic(CalculationInterface):
                         for j in range(n):
                             p[i_second_high][j] = 0
                         # and GOTO 2.
+# TODO: Return unified decision variable (not binarized)
