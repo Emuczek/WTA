@@ -27,7 +27,7 @@ class CalculationQuizHeuristic(CalculationInterface):
 
         # Data read
 
-        m, n, V, w, p0 = opendata(data_path, True)
+        t, m, n, V, w, p0, s, v, r = opendata(data_path, True)
         p = [copy.deepcopy(x) for x in p0]
 
         y_first_max = float(0)  # maximum value of y

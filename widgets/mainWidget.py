@@ -132,7 +132,7 @@ class MainWindow(QMainWindow):
         self.setStatusBar(self.statusbar)
 
         import_action = QAction("Importuj dane z pliku .JSON", self)
-        import_action.setStatusTip("Kliknij tutaj, zaimportować plik .JSON")
+        import_action.setStatusTip("Kliknij tutaj, aby zaimportować plik .JSON")
         import_action.triggered.connect(self.open_file_dialog)
 
         documentation_action = QAction("Informacje na temat programu", self)
@@ -144,20 +144,23 @@ class MainWindow(QMainWindow):
 
     def create_dock_widgets(self):
         dock1 = QDockWidget("Wybór metody", self)
-        dock1.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea | Qt.TopDockWidgetArea |
-                              Qt.BottomDockWidgetArea)
+        dock1.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
 
         layout_wybor = QVBoxLayout()
-        constraint_button = QPushButton("Programowanie ogarniczeń")
-        linapprox_button = QPushButton("Aproksymacja liniowa")
-        heuristic_fire_button = QPushButton("Heurystyka 'Fire Hawk Optimizer'")
-        heuristic_quiz_button = QPushButton("Heurystyka 'Quiz Problem Heuristic'")
+        self.constraint_button = QPushButton("Programowanie ogarniczeń")
+        self.constraint_button.setStyleSheet("""
+        background-color: lightgreen;
+        color: black;
+        """)
+        self.linapprox_button = QPushButton("Aproksymacja liniowa")
+        self.heuristic_fire_button = QPushButton("Heurystyka 'Fire Hawk Optimizer'")
+        self.heuristic_quiz_button = QPushButton("Heurystyka 'Quiz Problem Heuristic'")
         # heuristic_button.clicked.connect(self.status_dock_widget.start_processing)
 
-        layout_wybor.addWidget(constraint_button)
-        layout_wybor.addWidget(linapprox_button)
-        layout_wybor.addWidget(heuristic_fire_button)
-        layout_wybor.addWidget(heuristic_quiz_button)
+        layout_wybor.addWidget(self.constraint_button)
+        layout_wybor.addWidget(self.linapprox_button)
+        layout_wybor.addWidget(self.heuristic_fire_button)
+        layout_wybor.addWidget(self.heuristic_quiz_button)
         layout_wybor.addStretch(0)
 
         wybor_widget = QWidget()
@@ -166,6 +169,30 @@ class MainWindow(QMainWindow):
 
         self.addDockWidget(Qt.LeftDockWidgetArea, dock1)
         self.addDockWidget(Qt.BottomDockWidgetArea, self.status_dock_widget)
+
+        self.buttons = [
+            self.constraint_button,
+            self.linapprox_button,
+            self.heuristic_fire_button,
+            self.heuristic_quiz_button
+        ]
+
+        # Podłączenie funkcji wyboru
+        for button in self.buttons:
+            button.clicked.connect(self.handle_button_click)
+
+    def handle_button_click(self):
+        clicked_button = self.sender()  # Przycisk, który został kliknięty
+
+        # Resetowanie stylu wszystkich przycisków
+        for button in self.buttons:
+            button.setStyleSheet("")  # Domyślny styl
+
+        # Ustawienie nowego stylu dla klikniętego przycisku
+        clicked_button.setStyleSheet("""
+        background-color: lightgreen;
+        color: black;
+        """)
 
     def create_toolbars(self):
         start_stop_toolbar = QToolBar("startStopToolbar")
@@ -240,7 +267,7 @@ class MainWindow(QMainWindow):
     def stop_calculations(self):
         self.worker.calc.stop = True
         self.start_calc_button.setEnabled(True)
-        self.stop_calc_button.setEnabled(True)
+        self.stop_calc_button.setEnabled(False)
 
     def finished_calc(self, message):
         self.stopwatch_worker.stop()
@@ -249,6 +276,7 @@ class MainWindow(QMainWindow):
         print(f"Finished, solve: {message}")
         self.status_dock_widget.value_label.setText(f"Wynik: {round(objective(self.selected_file_path, message),3)}")
         self.start_calc_button.setEnabled(True)
+        self.stop_calc_button.setEnabled(False)
 
     def update_progress(self, message):
         self.status_dock_widget.value_label.setText(f"Aktualna wartość:"
