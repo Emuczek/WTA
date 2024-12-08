@@ -10,7 +10,7 @@ import time
 
 
 class CalculationQuizHeuristic(CalculationInterface):
-
+    # Start dynamizing
     emitProgress = Signal(list)
     finished = Signal(list)
 
