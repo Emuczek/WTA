@@ -1,6 +1,7 @@
 import json
 import numpy as np
 import pandas as pd
+import ast
 
 
 def explosionprequel(n: int):
@@ -21,18 +22,18 @@ def opendata(data_path: str, binarize: bool):
             V = data['targetWeights']  # number describing target importance
             s = data['targetStartingPosition']  # starting positions of targets
             v = data['targetVelocity']  # targets velocity
-            r = data['weaponRange']  # ranges of weapons
             data.pop('timeDim')
             data.pop('weaponTypeCount')
             data.pop('targetCount')
             data.pop('targetWeights')
             data.pop('targetStartingPosition')
             data.pop('targetVelocity')
-            data.pop('weaponRange')
             df = pd.DataFrame.from_dict(data)
             df['weaponsSupply'] = df['weaponsSupply'].apply(explosionprequel)
             df = df.explode('weaponsSupply')
             p = df['propabilities'].tolist()
+            r = df['weaponRange'].tolist()
+            df.to_csv("file")
             return t, len(p), len(p[0]), V, df['weaponsSupply'].astype(int).tolist(), p, s, v, r
         else:
             t = data['timeDim']

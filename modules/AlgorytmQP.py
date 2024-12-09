@@ -8,7 +8,11 @@ from modules.calculationInterface import CalculationInterface
 from PySide6.QtCore import QObject, Signal, QThread
 import time
 from modules.objectivefunction import objective
+import sys
+import numpy
+numpy.set_printoptions(threshold=sys.maxsize)
 
+data_path = "../data/testInstance5x5.json"
 
 class CalculationQuizHeuristic(CalculationInterface):
     # Start dynamizing
@@ -28,7 +32,7 @@ class CalculationQuizHeuristic(CalculationInterface):
 
         # Data read
 
-        t, m, n, V0, w, p0, s, v, r = opendata(data_path, True)
+        t, m, n, V, w, p0, s, v, r = opendata(data_path, True)
 
         y_first_max = float(0)  # maximum value of y
         y_second_high = float(0)  # second-highest value of y
@@ -58,18 +62,17 @@ class CalculationQuizHeuristic(CalculationInterface):
         for stamp in range(t):
             k = int(0)  # heuristic step counter
             p = [copy.deepcopy(x) for x in p0]
-            V = [copy.deepcopy(x) for x in V0]
             while True:
 
-                self.emitProgress.emit(var_x[0])
+                self.emitProgress.emit(var_x)
 
                 if self.stop:
-                    self.finished.emit(var_x[0])
+                    self.finished.emit(var_x)
                     return var_x
 
                 # 2. Build value array y
 
-                Vmatrix = V  # variable for creating y array
+                Vmatrix = copy.deepcopy(V)  # variable for creating y array
 
                 for _ in range(m - 1):
                     Vmatrix = np.vstack((Vmatrix, V))
@@ -84,7 +87,7 @@ class CalculationQuizHeuristic(CalculationInterface):
 
                 for i in range(len(y)):
                     for j in range(len(y[0])):
-                        if (s[j] - v[j]*(stamp-1)) > r[i]:
+                        if (s[j] - v[j]*stamp) > r[i]:
                             y[i][j] = 0  # Ustawienie wartości na 0
                             yt_minone[i][j] = 1
                         elif yt_minone[i][j] == 1:  # Funkcja pomocnicza
@@ -128,6 +131,9 @@ class CalculationQuizHeuristic(CalculationInterface):
                         # DELETE
                         # # print('i1 == i2')
 
+                        if (s[j_first_max] - v[j_first_max] * stamp) > r[i_first_max]:
+                            print("No nie zgadza sie mordo")
+                            print(stamp, i_first_max, j_first_max)
                         var_x[stamp, i_first_max, j_first_max] = 1  # 5. Set choosen weapon in decision variable.
 
                         k += 1  # increment step by 1
@@ -167,6 +173,9 @@ class CalculationQuizHeuristic(CalculationInterface):
                         # DELETE: BTW, i11??? i think its supose to be i12, j12
 
                         if y_first_max + y_second_second > y_second_high + y_max_second:
+                            if (s[j_first_max] - v[j_first_max] * stamp) > r[i_first_max]:
+                                print("No nie zgadza sie mordo")
+                                print(stamp, i_first_max, j_first_max)
                             var_x[stamp, i_first_max, j_first_max] = 1  # 5. Set choosen weapon in decision variable.
 
                             k += 1  # increment step by 1
@@ -185,6 +194,9 @@ class CalculationQuizHeuristic(CalculationInterface):
                                 # and GOTO 2.
 
                         else:
+                            if (s[j_second_high] - v[j_second_high] * stamp) > r[i_second_high]:
+                                print("No nie zgadza sie mordo")
+                                print(stamp, i_second_high, j_second_high)
                             var_x[stamp, i_second_high, j_second_high] = 1  # 5. Set choosen weapon in decision variable.
 
                             k += 1  # increment step by 1
@@ -197,8 +209,53 @@ class CalculationQuizHeuristic(CalculationInterface):
                                 for j in range(n):
                                     p[i_second_high][j] = 0
                                 # and GOTO 2.
-        print(f"Terminate, solve: \n {var_x}")
-        self.finished.emit(var_x[0])
-        return var_x[1]
+        self.finished.emit(var_x)
+        return var_x
         # TODO: Return unified decision variable (not binarized)
+
+
+calc = CalculationQuizHeuristic()
+solve = calc.calculate("data/testInstance5x5.json")
+# print(solve)
+
+
+#print(solve)
+# for x in solve:
+#     for y in x:
+#         print(y)
+
+t, m, n, V, w, p0, s, v, r = opendata(data_path, True)
+
+result = []
+
+w=[
+    10,
+    5,
+    10
+  ]
+
+for t_ in range(t):
+    idx = 0
+    #print(w)
+    temp2 = []
+    for x in w:
+        #print(x)
+        temp1 = np.zeros(n)
+        #print(range(idx, idx+x))
+        for i in range(idx, idx+x):
+            #print(temp1, solve[t_][i])
+            temp1 += solve[t_][i]
+            #print(temp1)
+        idx += x
+        temp2.append(temp1)
+    result.append(temp2)
+
+
+print(np.array(result))
+# Wyświetlamy wynik
+# print(summed_result)
+# print(np.cumsum(solve))
+# print(solve.shape)
+# print(f"Solve shape: {solve.shape}")
+print(f"Objective value: {objective('../data/testInstance5x5.json', result, False)}")
 

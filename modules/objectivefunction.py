@@ -2,13 +2,13 @@ import numpy as np
 from modules.openData import opendata
 
 
-def objective(file_path, x_dvar):
-    t, m, n, V, w, p, s, v, r = opendata(file_path, True)
-    obj = 0
+def objective(file_path, x_dvar, binarized):
+    t, m, n, V, w, p, s, v, r = opendata(file_path, binarized)
+    objective_value = 0
     for j in range(n):
-        temp = 0
+        product_term = 1
         for i in range(m):
-            temp += x_dvar[i][j] * np.log(1-p[i][j])
-        obj += V[j] * np.exp(temp)
-
-    return obj
+            for stamp in range(t):
+                product_term *= (1-p[int(i)][int(j)]) ** x_dvar[int(stamp)][int(i)][int(j)]
+        objective_value += V[j] * product_term
+    return objective_value
