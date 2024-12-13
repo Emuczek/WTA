@@ -32,7 +32,7 @@ class CalculationQuizHeuristic(CalculationInterface):
 
         # Data read
 
-        t, m, n, V, w, p0, s, v, r = opendata(data_path, True)
+        t, m, n, V, w, p0, s, v, r, goback = opendata(data_path, True)
 
         y_first_max = float(0)  # maximum value of y
         y_second_high = float(0)  # second-highest value of y
@@ -214,48 +214,66 @@ class CalculationQuizHeuristic(CalculationInterface):
         # TODO: Return unified decision variable (not binarized)
 
 
-calc = CalculationQuizHeuristic()
-solve = calc.calculate("data/testInstance5x5.json")
-# print(solve)
+def run_for_multiple_files(file_list):
+    results = []
+
+    # Przechodzimy po każdym pliku z listy
+    for file_path in file_list:
+        start_time = time.time()  # Zaczynamy mierzenie czasu
+
+        # Wykonanie obliczeń
+        calc = CalculationQuizHeuristic()
+        solve = calc.calculate(file_path)
+
+        t, m, n, V, w, p0, s, v, r, goback = opendata(file_path, True)
+
+        result = []
+
+        # Wykonanie głównej logiki
+        for t_ in range(t):
+            idx = 0
+            temp2 = []
+            for x in goback:
+                temp1 = np.zeros(n)
+                for i in range(idx, idx + x):
+                    temp1 += solve[t_][i]
+                idx += x
+                temp2.append(temp1)
+            result.append(temp2)
+
+        # Zbieramy czas obliczeń
+        elapsed_time = time.time() - start_time
+
+        # Obliczamy wartość objective
+        objective_value = objective(file_path, result, False)
+
+        # Dodajemy wyniki do listy
+        results.append({
+            'file': file_path,
+            'time': elapsed_time,
+            'decision_variables': np.array(result),
+            'objective_value': objective_value
+        })
+
+    return results
 
 
-#print(solve)
-# for x in solve:
-#     for y in x:
-#         print(y)
+# Przykładowa lista plików
+file_list = [
+    '../data/testInstance3x1x2.json',
+    '../data/testInstance3x3x4.json',  # Dodaj kolejne pliki do listy
+    '../data/testInstance3x6x8.json',
+    '../data/testInstance3x10x15.json'
+]
 
-t, m, n, V, w, p0, s, v, r = opendata(data_path, True)
+# Uruchomienie funkcji
+results = run_for_multiple_files(file_list)
 
-result = []
-
-w=[
-    10,
-    5,
-    10
-  ]
-
-for t_ in range(t):
-    idx = 0
-    #print(w)
-    temp2 = []
-    for x in w:
-        #print(x)
-        temp1 = np.zeros(n)
-        #print(range(idx, idx+x))
-        for i in range(idx, idx+x):
-            #print(temp1, solve[t_][i])
-            temp1 += solve[t_][i]
-            #print(temp1)
-        idx += x
-        temp2.append(temp1)
-    result.append(temp2)
-
-
-print(np.array(result))
-# Wyświetlamy wynik
-# print(summed_result)
-# print(np.cumsum(solve))
-# print(solve.shape)
-# print(f"Solve shape: {solve.shape}")
-print(f"Objective value: {objective('../data/testInstance5x5.json', result, False)}")
+# Wydrukowanie wyników
+for res in results:
+    print(f"File: {res['file']}")
+    print(f"Time: {res['time']} seconds")
+    #print(f"Decision Variables: {res['decision_variables']}")
+    print(f"Objective Value: {res['objective_value']}")
+    print("-" * 50)
 

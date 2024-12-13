@@ -8,7 +8,7 @@ from modules.objectivefunction import objective as objective_val
 import timeit
 
 # TUTAJ WPISZ NAZWE PLIKU
-data_path = "../data/testInstance2x6x8.json"
+data_path = "../data/testInstance2x1x2.json"
 
 # Dane wejściowe (muszą być załadowane wcześniej)
 t, m, n, V, w, p, s, v, r = opendata(data_path, False)

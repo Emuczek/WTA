@@ -4,7 +4,7 @@ import numpy as np
 from modules.objectivefunction import objective
 
 # TUTAJ WPISZ NAZWE PLIKU
-data_path = "../data/testInstance5x15x15.json"
+data_path = "../data/testInstance2x1x2.json"
 
 
 def create_wta_model(t, m, n, V, w, p, s, v, r, B):
@@ -24,7 +24,9 @@ def create_wta_model(t, m, n, V, w, p, s, v, r, B):
     :return: Model object
     """
     # Create model
+
     model = Model(name='Dynamic_WTA_Piecewise')
+    model.context.solver.log_output = True
 
     # Decision Variables
     # x[t, i, j] - binary variable: weapon i assigned to target j at time t

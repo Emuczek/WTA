@@ -3,7 +3,7 @@ from typing import Callable
 from dataclasses import dataclass
 from modules.objectivefunction import objective
 from modules.openData import opendata
-file_path = "../data/testInstance5x5.json"
+file_path = "../data/testInstance3x6x8.json"
 
 
 @dataclass
@@ -12,11 +12,11 @@ class ProblemParameters:
     m: int  # Number of weapons
     n: int  # Number of targets
     r: list  # Weapon ranges
-    w: list # Target weights
+    w: list  # Target weights
     s: list  # Initial target distances
     v: list  # Target velocities
     q: list  # Survival probabilities
-    z: list # capacity
+    z: list  # capacity
     n_k: int  # Number of candidates in solution space
     n_s: int  # Number of predators among candidates
     iterations: int  # Number of iterations
@@ -92,7 +92,7 @@ def fire_hawk_optimization(params: ProblemParameters,
         X[s] = constraint_correction(X[s], params.r, params.s, params.v,
                                      params.z)  # Assuming z_i = 1 for all weapons
 
-    print(X)
+    #print(X)
 
     # Calculate initial objective values
     obj_values = np.array([objective_function(file_path, X[s], False) for s in range(params.n_s)])
@@ -100,7 +100,7 @@ def fire_hawk_optimization(params: ProblemParameters,
     # Main optimization loop
     run = 0
     while run < params.iterations:
-        print(f"Iteration {run}")
+        #print(f"Iteration {run}")
         # Sort solutions by objective value
         sorted_indices = np.argsort(obj_values)
         X = X[sorted_indices]
@@ -159,7 +159,7 @@ def fire_hawk_optimization(params: ProblemParameters,
 
         # Combine populations and evaluate
         X = np.vstack([GB[np.newaxis, :], FH, PR])
-        print(X)
+        #print(X)
         obj_values = np.array([objective_function(file_path, X[s], False) for s in range(len(X))])
 
         run += 1
@@ -169,34 +169,137 @@ def fire_hawk_optimization(params: ProblemParameters,
     return X[np.argmin(obj_values)]
 
 
-t, m, n, V, w, p, s, v, r = opendata(file_path, False)
-
-
-# Example parameters
-params = ProblemParameters(
-    T=t,  # 3 time periods
-    m=m,  # 2 weapons
-    n=n,  # 4 targets
-    r=r,  # Weapon ranges
-    w=V,  # Target weights
-    s=s,  # Initial distances
-    v=v,  # Velocities
-    q=p,  # Survival probabilities
-    z=w,
-    n_k=100,  # Number of fire hawks
-    n_s=500,  # Population size
-    iterations=50
-)
+# t, m, n, V, w, p, s, v, r = opendata(file_path, False)
+#
+#
+# # Example parameters
+# params = ProblemParameters(
+#     T=t,  # 3 time periods
+#     m=m,  # 2 weapons
+#     n=n,  # 4 targets
+#     r=r,  # Weapon ranges
+#     w=V,  # Target weights
+#     s=s,  # Initial distances
+#     v=v,  # Velocities
+#     q=p,  # Survival probabilities
+#     z=w,
+#     n_k=50,  # Number of fire hawks
+#     n_s=500,  # Population size
+#     iterations=10
+# )
+#
+# import time
+#
+# print("started solving")
+# start_time = time.time()
+# solve = fire_hawk_optimization(params, objective)
+# end_time = time.time()
+# elapsed_time = end_time - start_time
+# minutes, seconds = divmod(elapsed_time, 60)
+# print(solve)
+# print(objective(file_path, solve, False))
+# print(f"stopped solving. Time taken: {int(minutes)} minutes and {seconds:.2f} seconds")
+#
+#
+# import time
+# import optuna
+#
+# # Funkcja celu dla Optuna
+# def objective_two(trial):
+#     # Dyskretne zbiory wartości dla parametrów do strojenia
+#     n_k = trial.suggest_categorical("n_k", [50, 100, 200])
+#     n_s = trial.suggest_categorical("n_s", [100, 200, 500])
+#     iterations = trial.suggest_categorical("iterations", [10, 50, 100, 200])
+#
+#     # Wczytanie danych z pliku
+#     t, m, n, V, w, p, s, v, r = opendata(file_path, False)
+#
+#     # Definiowanie parametrów problemu z uwzględnieniem strojenia
+#     params = ProblemParameters(
+#         T=t,
+#         m=m,
+#         n=n,
+#         r=r,
+#         w=V,
+#         s=s,
+#         v=v,
+#         q=p,
+#         z=w,
+#         n_k=,  # Liczba "fire hawks"
+#         n_s=n_s,  # Rozmiar populacji
+#         iterations=iterations,  # Liczba iteracji
+#     )
+#
+#     # Mierzenie czasu obliczeń
+#     print(f"Started solving with params: {params}")
+#     start_time = time.time()
+#     solve = fire_hawk_optimization(params, objective)  # Wywołanie Twojego algorytmu
+#     end_time = time.time()
+#
+#     elapsed_time = end_time - start_time
+#     minutes, seconds = divmod(elapsed_time, 60)
+#     print(f"Solved. Time taken: {int(minutes)} minutes and {seconds:.2f} seconds")
+#
+#     # Obliczanie wartości funkcji celu
+#     objective_value = objective(file_path, solve, False)
+#     print(f"Objective value: {objective_value}")
+#
+#     # Zwracamy wartość funkcji celu do Optuna
+#     return objective_value
+#
+#
+# study = optuna.create_study(direction="minimize")
+# study.optimize(objective_two, n_trials=50)
+#
+# # Wyświetlenie najlepszych wyników
+# print("Najlepsze parametry:", study.best_params)
+# print("Najlepszy wynik funkcji celu:", study.best_value)
 
 import time
 
-print("started solving")
-start_time = time.time()
-solve = fire_hawk_optimization(params, objective)
-end_time = time.time()
-elapsed_time = end_time - start_time
-minutes, seconds = divmod(elapsed_time, 60)
-print(solve)
-print(np.sum(solve))
-print(objective(file_path, solve, False))
-print(f"stopped solving. Time taken: {int(minutes)} minutes and {seconds:.2f} seconds")
+# Lista ścieżek do plików wejściowych
+file_paths = [
+    '../data/testInstance50x50x50.json'
+]
+
+
+# Funkcja, która rozwiązuje problem dla danego pliku
+def solve_for_file(file_path):
+    t, m, n, V, w, p, s, v, r = opendata(file_path, False)
+
+    # Parametry przykładowe
+    params = ProblemParameters(
+        T=t,  # 3 time periods
+        m=m,  # 2 weapons
+        n=n,  # 4 targets
+        r=r,  # Weapon ranges
+        w=V,  # Target weights
+        s=s,  # Initial distances
+        v=v,  # Velocities
+        q=p,  # Survival probabilities
+        z=w,
+        n_k=50,  # Number of fire hawks
+        n_s=500,  # Population size
+        iterations=10
+    )
+
+    # Rozpoczęcie obliczeń
+    #print(f"Started solving for {file_path}")
+    start_time = time.time()
+    solve = fire_hawk_optimization(params, objective)
+    end_time = time.time()
+
+    # Obliczanie czasu
+    elapsed_time = end_time - start_time
+    minutes, seconds = divmod(elapsed_time, 60)
+
+    # Wyświetlanie wyników
+    #print(solve)
+    print(f"{objective(file_path, solve, False):.3e}")
+    print(f"Stopped solving for {file_path}. Time taken: {int(minutes)} minutes and {seconds:.3f} seconds")
+    print("-" * 50)
+
+
+# Uruchomienie obliczeń dla każdego pliku
+for file_path in file_paths:
+    solve_for_file(file_path)

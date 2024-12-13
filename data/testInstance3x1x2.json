@@ -1,0 +1,29 @@
+{
+  "timeDim": 3,
+  "weaponTypeCount": 1,
+  "targetCount": 2,
+  "targetWeights": [
+    51096,
+    90091
+  ],
+  "weaponsSupply": [
+    10
+  ],
+  "propabilities": [
+    [
+      0.823,
+      0.681
+    ]
+  ],
+  "targetStartingPosition": [
+    1305,
+    1600
+  ],
+  "targetVelocity": [
+    102,
+    102
+  ],
+  "weaponRange": [
+    1555
+  ]
+}

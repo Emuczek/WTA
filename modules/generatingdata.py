@@ -32,9 +32,9 @@ def generate_random_data(t, weaponTypeCount, targetCount):
     return data
 
 
-t = 5
-weaponTypeCount = 16
-targetCount = 16
+t = 50
+weaponTypeCount = 50
+targetCount = 50
 
 # Generowanie danych
 random_data = generate_random_data(t, weaponTypeCount, targetCount)
