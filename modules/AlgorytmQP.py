@@ -62,13 +62,16 @@ class CalculationQuizHeuristic(CalculationInterface):
         for stamp in range(t):
             k = int(0)  # heuristic step counter
             p = [copy.deepcopy(x) for x in p0]
+
+            if self.stop:
+                break
+
             while True:
 
-                self.emitProgress.emit(var_x)
-
                 if self.stop:
-                    self.finished.emit(var_x)
-                    return var_x
+                    break
+
+                self.emitProgress.emit(var_x)
 
                 # 2. Build value array y
 
@@ -218,49 +221,49 @@ class CalculationQuizHeuristic(CalculationInterface):
         return result
 
 
-def run_for_multiple_files(file_list):
-    results = []
-
-    # Przechodzimy po każdym pliku z listy
-    for file_path in file_list:
-        start_time = time.time()  # Zaczynamy mierzenie czasu
-
-        # Wykonanie obliczeń
-        calc = CalculationQuizHeuristic()
-        solve = calc.calculate(file_path)
-        # Zbieramy czas obliczeń
-        elapsed_time = time.time() - start_time
-
-        # Obliczamy wartość objective
-        objective_value = objective(file_path, solve, False)
-
-        # Dodajemy wyniki do listy
-        results.append({
-            'file': file_path,
-            'time': elapsed_time,
-            'decision_variables': solve,
-            'objective_value': objective_value
-        })
-
-    return results
-
-
-# Przykładowa lista plików
-file_list = [
-    '../data/testInstance3x1x2.json',
-    '../data/testInstance3x3x4.json',  # Dodaj kolejne pliki do listy
-    '../data/testInstance3x6x8.json',
-    '../data/testInstance3x10x15.json'
-]
-
-# Uruchomienie funkcji
-results = run_for_multiple_files(file_list)
-
-# Wydrukowanie wyników
-for res in results:
-    print(f"File: {res['file']}")
-    print(f"Time: {res['time']} seconds")
-    #print(f"Decision Variables: {res['decision_variables']}")
-    print(f"Objective Value: {res['objective_value']}")
-    print("-" * 50)
+# def run_for_multiple_files(file_list):
+#     results = []
+#
+#     # Przechodzimy po każdym pliku z listy
+#     for file_path in file_list:
+#         start_time = time.time()  # Zaczynamy mierzenie czasu
+#
+#         # Wykonanie obliczeń
+#         calc = CalculationQuizHeuristic()
+#         solve = calc.calculate(file_path)
+#         # Zbieramy czas obliczeń
+#         elapsed_time = time.time() - start_time
+#
+#         # Obliczamy wartość objective
+#         objective_value = objective(file_path, solve, False)
+#
+#         # Dodajemy wyniki do listy
+#         results.append({
+#             'file': file_path,
+#             'time': elapsed_time,
+#             'decision_variables': solve,
+#             'objective_value': objective_value
+#         })
+#
+#     return results
+#
+#
+# # Przykładowa lista plików
+# file_list = [
+#     '../data/testInstance3x1x2.json',
+#     '../data/testInstance3x3x4.json',  # Dodaj kolejne pliki do listy
+#     '../data/testInstance3x6x8.json',
+#     '../data/testInstance3x10x15.json'
+# ]
+#
+# # Uruchomienie funkcji
+# results = run_for_multiple_files(file_list)
+#
+# # Wydrukowanie wyników
+# for res in results:
+#     print(f"File: {res['file']}")
+#     print(f"Time: {res['time']} seconds")
+#     #print(f"Decision Variables: {res['decision_variables']}")
+#     print(f"Objective Value: {res['objective_value']}")
+#     print("-" * 50)
 

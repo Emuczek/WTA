@@ -15,7 +15,7 @@ import markdown
 
 from modules.objectivefunction import objective
 from widgets.centralVisualization import GraphWidget
-from modules.quizProblemHeuristic import CalculationQuizHeuristic
+from modules.AlgorytmQP import CalculationQuizHeuristic
 
 
 class Worker(QObject):
@@ -98,7 +98,9 @@ class MainWindow(QMainWindow):
 
         # Central widget
 
-        self.central_widget = GraphWidget([])
+        self.central_widget = GraphWidget([
+        [[1, 0, 1], [0, 1, 0], [1, 0, 0]],
+        [[0, 1], [1, 0]]])
         self.setCentralWidget(self.central_widget)
 
         # Dock widgets
@@ -274,10 +276,10 @@ class MainWindow(QMainWindow):
         self.central_widget = GraphWidget(message)
         self.setCentralWidget(self.central_widget)
         print(f"Finished, solve: {message}")
-        self.status_dock_widget.value_label.setText(f"Wynik: {round(objective(self.selected_file_path, message),3)}")
+        self.status_dock_widget.value_label.setText(f"Wynik: {round(objective(self.selected_file_path, message, False),3)}")
         self.start_calc_button.setEnabled(True)
         self.stop_calc_button.setEnabled(False)
 
     def update_progress(self, message):
         self.status_dock_widget.value_label.setText(f"Aktualna wartość:"
-                                                    f" {round(objective(self.selected_file_path, message),3)}")
+                                                    f" {round(objective(self.selected_file_path, message, False),3)}")
