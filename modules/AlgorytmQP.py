@@ -130,10 +130,6 @@ class CalculationQuizHeuristic(CalculationInterface):
                     if i_first_max == i_second_high:
                         # DELETE
                         # # print('i1 == i2')
-
-                        if (s[j_first_max] - v[j_first_max] * stamp) > r[i_first_max]:
-                            print("No nie zgadza sie mordo")
-                            print(stamp, i_first_max, j_first_max)
                         var_x[stamp, i_first_max, j_first_max] = 1  # 5. Set choosen weapon in decision variable.
 
                         k += 1  # increment step by 1
@@ -173,9 +169,6 @@ class CalculationQuizHeuristic(CalculationInterface):
                         # DELETE: BTW, i11??? i think its supose to be i12, j12
 
                         if y_first_max + y_second_second > y_second_high + y_max_second:
-                            if (s[j_first_max] - v[j_first_max] * stamp) > r[i_first_max]:
-                                print("No nie zgadza sie mordo")
-                                print(stamp, i_first_max, j_first_max)
                             var_x[stamp, i_first_max, j_first_max] = 1  # 5. Set choosen weapon in decision variable.
 
                             k += 1  # increment step by 1
@@ -194,9 +187,6 @@ class CalculationQuizHeuristic(CalculationInterface):
                                 # and GOTO 2.
 
                         else:
-                            if (s[j_second_high] - v[j_second_high] * stamp) > r[i_second_high]:
-                                print("No nie zgadza sie mordo")
-                                print(stamp, i_second_high, j_second_high)
                             var_x[stamp, i_second_high, j_second_high] = 1  # 5. Set choosen weapon in decision variable.
 
                             k += 1  # increment step by 1
@@ -209,9 +199,23 @@ class CalculationQuizHeuristic(CalculationInterface):
                                 for j in range(n):
                                     p[i_second_high][j] = 0
                                 # and GOTO 2.
-        self.finished.emit(var_x)
-        return var_x
-        # TODO: Return unified decision variable (not binarized)
+
+        result = []
+
+        # Returning from binarized data
+        for t_ in range(t):
+            idx = 0
+            temp2 = []
+            for x in goback:
+                temp1 = np.zeros(n)
+                for i in range(idx, idx + x):
+                    temp1 += var_x[t_][i]
+                idx += x
+                temp2.append(temp1)
+            result.append(temp2)
+        result = np.array(result)
+        self.finished.emit(result)
+        return result
 
 
 def run_for_multiple_files(file_list):
@@ -224,34 +228,17 @@ def run_for_multiple_files(file_list):
         # Wykonanie obliczeń
         calc = CalculationQuizHeuristic()
         solve = calc.calculate(file_path)
-
-        t, m, n, V, w, p0, s, v, r, goback = opendata(file_path, True)
-
-        result = []
-
-        # Wykonanie głównej logiki
-        for t_ in range(t):
-            idx = 0
-            temp2 = []
-            for x in goback:
-                temp1 = np.zeros(n)
-                for i in range(idx, idx + x):
-                    temp1 += solve[t_][i]
-                idx += x
-                temp2.append(temp1)
-            result.append(temp2)
-
         # Zbieramy czas obliczeń
         elapsed_time = time.time() - start_time
 
         # Obliczamy wartość objective
-        objective_value = objective(file_path, result, False)
+        objective_value = objective(file_path, solve, False)
 
         # Dodajemy wyniki do listy
         results.append({
             'file': file_path,
             'time': elapsed_time,
-            'decision_variables': np.array(result),
+            'decision_variables': solve,
             'objective_value': objective_value
         })
 
