@@ -144,6 +144,8 @@ class CalculationAPROX(CalculationInterface):
         # print("started solving")
         start_time = timeit.default_timer()
         model = create_wta_model(t, m, n, V, w, p, s, v, r, B)
+        model.parameters.timelimit = 60
+        # model.set_time_limit(60)  # The same
         solution = model.solve()
         end_time = timeit.default_timer()
         elapsed_time = end_time - start_time

@@ -289,7 +289,8 @@ class MainWindow(QMainWindow):
         self.stopwatch_thread.start()
 
         self.start_calc_button.setEnabled(False)
-        self.stop_calc_button.setEnabled(True)
+        if self.methodchoice >= 2:
+            self.stop_calc_button.setEnabled(True)
 
     def stop_calculations(self):
         self.worker.calc.stop = True
