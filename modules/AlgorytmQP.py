@@ -12,9 +12,8 @@ import sys
 import numpy
 numpy.set_printoptions(threshold=sys.maxsize)
 
-data_path = "../data/testInstance5x5.json"
 
-class CalculationQuizHeuristic(CalculationInterface):
+class CalculationQP(CalculationInterface):
     # Start dynamizing
     emitProgress = Signal(list)
     finished = Signal(list)
@@ -24,6 +23,7 @@ class CalculationQuizHeuristic(CalculationInterface):
         self.stop = False
 
     def calculate(self, data_path: str):
+        self.emitProgress.emit("start_progress")
         n = int()  # number of incoming targets (J[j] - [1,2, .. n])
         m = int()  # number of weapons (I[i] - [1,2, .. m])
 

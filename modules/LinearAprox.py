@@ -2,9 +2,17 @@ from docplex.mp.model import Model
 from modules.openData import opendata
 import numpy as np
 from modules.objectivefunction import objective
-
-# TUTAJ WPISZ NAZWE PLIKU
-data_path = "../data/testInstance2x1x2.json"
+from typing import Callable
+from dataclasses import dataclass
+from modules.objectivefunction import objective
+from modules.openData import opendata
+import copy
+from modules.calculationInterface import CalculationInterface
+from PySide6.QtCore import QObject, Signal, QThread
+import time
+from modules.objectivefunction import objective
+import sys
+import numpy
 
 
 def create_wta_model(t, m, n, V, w, p, s, v, r, B):
@@ -99,67 +107,70 @@ def create_wta_model(t, m, n, V, w, p, s, v, r, B):
 
     return model
 
-# Example usage
-if __name__ == "__main__":
-    # Load data
-    t, m, n, V, w, p, s, v, r = opendata(data_path, False)
 
-    b_j_values = []
+class CalculationAPROX(CalculationInterface):
+    # Start dynamizing
+    emitProgress = Signal(list)
+    finished = Signal(list)
 
-    # Obliczanie wartości b_j dla każdego celu j
-    for j in range(n):
-        b_j = sum(w[i] * np.log(1 - p[i][j]) for i in range(m))  # Obliczanie sumy dla każdego celu j
-        #print(b_j)
-        b_j_values.append(b_j)
+    def __init__(self):
+        super().__init__()
+        self.stop = False
 
-    # Tworzenie nowych list z równomiernie rozmieszczonymi wartościami dla każdego b_j
-    B = {}
+    def calculate(self, data_path: str):
+        self.emitProgress.emit("start_progress")
+        # Load data
+        t, m, n, V, w, p, s, v, r = opendata(data_path, False)
 
-    for j, b_j in enumerate(b_j_values):
-        # Generujemy n równomiernie rozmieszczonych wartości od b_j do 0
-        B_for_j = np.linspace(b_j, 0, 100).tolist()
-        B[j] = B_for_j
+        b_j_values = []
 
-    #print(B)
+        # Obliczanie wartości b_j dla każdego celu j
+        for j in range(n):
+            b_j = sum(w[i] * np.log(1 - p[i][j]) for i in range(m))  # Obliczanie sumy dla każdego celu j
+            #print(b_j)
+            b_j_values.append(b_j)
 
-    # B = {0: [-180.0, -14.0, -9.0, -5.0, 0.0], 1: [-180.0, -14.0, -9.0, -5.0, 0.0], 2: [-180.0, -14.0, -9.0, -5.0, 0.0], 3: [-180.0, -14.0, -9.0, -5.0, 0.0], 4: [-180.0, -14.0, -9.0, -5.0, 0.0]}
+        # Tworzenie nowych list z równomiernie rozmieszczonymi wartościami dla każdego b_j
+        B = {}
 
-    # Approximation points for each target (B)
-    # B = {j: [-100, -50, -10, -5, -2, -1, -0.5, 0] for j in range(n)}  # Example piecewise points
+        for j, b_j in enumerate(b_j_values):
+            # Generujemy n równomiernie rozmieszczonych wartości od b_j do 0
+            B_for_j = np.linspace(b_j, 0, 100).tolist()
+            B[j] = B_for_j
 
-    #print(B)
+        # Create and solve model
+        import timeit
 
-    # Create and solve model
-    import timeit
+        # print("started solving")
+        start_time = timeit.default_timer()
+        model = create_wta_model(t, m, n, V, w, p, s, v, r, B)
+        solution = model.solve()
+        end_time = timeit.default_timer()
+        elapsed_time = end_time - start_time
+        # print(f"stopped solving. Time taken: {elapsed_time:.6f} seconds")
 
-    print("started solving")
-    start_time = timeit.default_timer()
-    model = create_wta_model(t, m, n, V, w, p, s, v, r, B)
-    solution = model.solve()
-    end_time = timeit.default_timer()
-    elapsed_time = end_time - start_time
-    print(f"stopped solving. Time taken: {elapsed_time:.6f} seconds")
+        if solution:
+            #print("Optimal objective value:", solution.get_objective_value())
 
-    if solution:
-        #print("Optimal objective value:", solution.get_objective_value())
+            # Print weapon assignments
+            for t_ in range(t):
+                #print(f"\nTime period {t_}:")
+                for i in range(m):
+                    for j in range(n):
+                        val = solution.get_value(f'x_{t_}_{i}_{j}')
+                        # print(f"x_{t_}_{i}_{j} Weapon {i} -> Target {j}: {val:.2f}")
 
-        # Print weapon assignments
-        for t_ in range(t):
-            #print(f"\nTime period {t_}:")
-            for i in range(m):
-                for j in range(n):
-                    val = solution.get_value(f'x_{t_}_{i}_{j}')
-                    # print(f"x_{t_}_{i}_{j} Weapon {i} -> Target {j}: {val:.2f}")
+            x_var = np.zeros((t, m, n))
 
-        x_var = np.zeros((t, m, n))
-
-        # Wypełnimy tę macierz wartościami z rozwiązania
-        for t_ in range(t):
-            for i in range(m):
-                for j in range(n):
-                    val = solution.get_value(f'x_{t_}_{i}_{j}')
-                    x_var[t_, i, j] = val
-        print(x_var)
-        print(f"{objective(data_path, x_var, False):.3e}")
-    else:
-        print("No solution found")
+            # Wypełnimy tę macierz wartościami z rozwiązania
+            for t_ in range(t):
+                for i in range(m):
+                    for j in range(n):
+                        val = solution.get_value(f'x_{t_}_{i}_{j}')
+                        x_var[t_, i, j] = val
+            # print(x_var)
+            # print(f"{objective(data_path, x_var, False):.3e}")
+            self.finished.emit(x_var)
+            return x_var
+        else:
+            print("No solution found")

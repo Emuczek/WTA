@@ -15,15 +15,25 @@ import markdown
 
 from modules.objectivefunction import objective
 from widgets.centralVisualization import GraphWidget
-from modules.AlgorytmQP import CalculationQuizHeuristic
+from modules.AlgorytmQP import CalculationQP
+from modules.AlgorytmFHO import CalculationFHO
+from modules.Contraint import CalculationCONST
+from modules.LinearAprox import CalculationAPROX
 
 
 class Worker(QObject):
     finished = Signal()
 
-    def __init__(self, file_path):
+    def __init__(self, file_path, method_choice):
         super().__init__()
-        self.calc = CalculationQuizHeuristic()
+        if method_choice == 0:
+            self.calc = CalculationCONST()
+        if method_choice == 1:
+            self.calc = CalculationAPROX()
+        if method_choice == 2:
+            self.calc = CalculationFHO()
+        if method_choice == 3:
+            self.calc = CalculationQP()
         self.current_file_path = file_path
 
     def defstop(self):
@@ -87,6 +97,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.methodchoice = 0
         self.stopwatch_thread = None
         self.stopwatch_worker = None
         self.selected_file_path = str()
@@ -98,9 +109,7 @@ class MainWindow(QMainWindow):
 
         # Central widget
 
-        self.central_widget = GraphWidget([
-        [[1, 0, 1], [0, 1, 0], [1, 0, 0]],
-        [[0, 1], [1, 0]]])
+        self.central_widget = GraphWidget([])
         self.setCentralWidget(self.central_widget)
 
         # Dock widgets
@@ -154,10 +163,13 @@ class MainWindow(QMainWindow):
         background-color: lightgreen;
         color: black;
         """)
+        self.constraint_button.clicked.connect(self.changeto_const)
         self.linapprox_button = QPushButton("Aproksymacja liniowa")
+        self.linapprox_button.clicked.connect(self.changeto_aprox)
         self.heuristic_fire_button = QPushButton("Heurystyka 'Fire Hawk Optimizer'")
+        self.heuristic_fire_button.clicked.connect(self.changeto_fho)
         self.heuristic_quiz_button = QPushButton("Heurystyka 'Quiz Problem Heuristic'")
-        # heuristic_button.clicked.connect(self.status_dock_widget.start_processing)
+        self.heuristic_quiz_button.clicked.connect(self.changeto_qp)
 
         layout_wybor.addWidget(self.constraint_button)
         layout_wybor.addWidget(self.linapprox_button)
@@ -195,6 +207,19 @@ class MainWindow(QMainWindow):
         background-color: lightgreen;
         color: black;
         """)
+
+    def changeto_const(self):
+        self.methodchoice = 0
+
+    def changeto_aprox(self):
+        self.methodchoice = 1
+
+    def changeto_fho(self):
+        self.methodchoice = 2
+
+    def changeto_qp(self):
+        self.methodchoice = 3
+
 
     def create_toolbars(self):
         start_stop_toolbar = QToolBar("startStopToolbar")
@@ -243,7 +268,7 @@ class MainWindow(QMainWindow):
     def start_calculations(self):
         self.thread = QThread()
         self.stopwatch_thread = QThread()
-        self.worker = Worker(self.selected_file_path)
+        self.worker = Worker(self.selected_file_path, self.methodchoice)
         self.stopwatch_worker = StopwatchWorker()
         self.worker.moveToThread(self.thread)
         self.stopwatch_worker.moveToThread(self.stopwatch_thread)
