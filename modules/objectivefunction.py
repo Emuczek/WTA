@@ -3,7 +3,7 @@ from modules.openData import opendata
 
 
 def objective(file_path, x_dvar, binarized):
-    if str(x_dvar) == "start_progress":
+    if x_dvar == ['s', 't', 'a', 'r', 't', '_', 'p', 'r', 'o', 'g', 'r', 'e', 's', 's']:
         return 0
     else:
         t, m, n, V, w, p, s, v, r = opendata(file_path, binarized)

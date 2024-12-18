@@ -4,55 +4,63 @@ import numpy as np
 from modules.objectivefunction import objective
 from typing import Callable
 from dataclasses import dataclass
-from modules.objectivefunction import objective
 from modules.openData import opendata
 import copy
 from modules.calculationInterface import CalculationInterface
 from PySide6.QtCore import QObject, Signal, QThread
 import time
-from modules.objectivefunction import objective
 import sys
 import numpy
+from docplex.mp.progress import SolutionListener
+
+
+class CustomCallback(SolutionListener):
+    def __init__(self, outer_instance):
+        super().__init__()
+        self.outer = outer_instance  # Store it
+        self.x_var = None
+
+    def notify_start(self):
+        self.outer.emitProgress.emit(404)
+
+    def notify_solution(self, sol):
+        if sol:
+            t, m, n, V, w, p, s, v, r = opendata(self.outer.dataPathyn, False)
+            self.x_var = np.zeros((t, m, n))
+
+            for t_ in range(t):
+                for i in range(m):
+                    for j in range(n):
+                        val = sol.get_value(f'x_{t_}_{i}_{j}')
+                        self.x_var[t_, i, j] = val
+            self.outer.emitProgress.emit(self.x_var)
+
+    def notify_progress(self, data):
+        if self.outer.stop and self.x_var is not None:
+            self.outer.finished.emit(self.x_var)
+            self.abort()
+        elif self.outer.stop:
+            self.outer.finished.emit(404)
+            self.abort()
 
 
 def create_wta_model(t, m, n, V, w, p, s, v, r, B):
-    """
-    Creates a DOCPLEX model for the Weapon-Target Assignment problem
-    with piecewise linear approximation.
-    :param t: Number of time periods
-    :param m: Number of weapons
-    :param n: Number of targets
-    :param V: Target weights
-    :param w: Maximum shots per weapon
-    :param p: Destroy probabilities
-    :param s: Initial distances to targets
-    :param v: Target velocities
-    :param r: Weapon ranges
-    :param B: Approximation points for each target
-    :return: Model object
-    """
-    # Create model
 
     model = Model(name='Dynamic_WTA_Piecewise')
     model.context.solver.log_output = True
 
-    # Decision Variables
-    # x[t, i, j] - binary variable: weapon i assigned to target j at time t
     x = model.integer_var_dict(
         ((t_, i, j) for t_ in range(t) for i in range(m) for j in range(n)),
-        lb=0,  # Lower bound ustawiony na 1, aby zmienna była dodatnią liczbą całkowitą
+        lb=0,
         name='x'
     )
 
-    # λ[j,k] - weights for piecewise approximation
     lambda_vars = model.continuous_var_dict(
         ((j, k) for j in range(n) for k in range(len(B[j]))),
-        lb=0,  # Constraint (5)
+        lb=0,
         name='lambda'
     )
-    #print(lambda_vars )
 
-    # Objective Function (1)
     obj_expr = model.sum(
         V[j] * model.sum(
             lambda_vars[j, k] * np.exp(B[j][k])
@@ -62,7 +70,6 @@ def create_wta_model(t, m, n, V, w, p, s, v, r, B):
     )
     model.minimize(obj_expr)
 
-    # Constraint (2): Piecewise approximation equality
     for j in range(n):
         model.add_constraint(
             model.sum(
@@ -78,7 +85,6 @@ def create_wta_model(t, m, n, V, w, p, s, v, r, B):
             )
         )
 
-    # Constraint (3): λ sums to 1
     for j in range(n):
         model.add_constraint(
             model.sum(
@@ -87,7 +93,6 @@ def create_wta_model(t, m, n, V, w, p, s, v, r, B):
             ) == 1
         )
 
-    # Constraint (4): Maximum shots per weapon
     for t_ in range(t):
         for i in range(m):
             model.add_constraint(
@@ -97,7 +102,6 @@ def create_wta_model(t, m, n, V, w, p, s, v, r, B):
                 ) <= w[i]
             )
 
-    # Constraint (5): Distance and range constraint
     for t_ in range(t):
         for j in range(n):
             for i in range(m):
@@ -109,7 +113,6 @@ def create_wta_model(t, m, n, V, w, p, s, v, r, B):
 
 
 class CalculationAPROX(CalculationInterface):
-    # Start dynamizing
     emitProgress = Signal(list)
     finished = Signal(list)
 
@@ -118,60 +121,46 @@ class CalculationAPROX(CalculationInterface):
         self.stop = False
 
     def calculate(self, data_path: str):
+        self.dataPathyn = data_path
         self.emitProgress.emit("start_progress")
-        # Load data
         t, m, n, V, w, p, s, v, r = opendata(data_path, False)
 
         b_j_values = []
 
-        # Obliczanie wartości b_j dla każdego celu j
         for j in range(n):
-            b_j = sum(w[i] * np.log(1 - p[i][j]) for i in range(m))  # Obliczanie sumy dla każdego celu j
-            #print(b_j)
+            b_j = sum(w[i] * np.log(1 - p[i][j]) for i in range(m))
             b_j_values.append(b_j)
 
-        # Tworzenie nowych list z równomiernie rozmieszczonymi wartościami dla każdego b_j
         B = {}
 
         for j, b_j in enumerate(b_j_values):
-            # Generujemy n równomiernie rozmieszczonych wartości od b_j do 0
             B_for_j = np.linspace(b_j, 0, 100).tolist()
             B[j] = B_for_j
 
-        # Create and solve model
         import timeit
 
-        # print("started solving")
         start_time = timeit.default_timer()
         model = create_wta_model(t, m, n, V, w, p, s, v, r, B)
         model.parameters.timelimit = 60
-        # model.set_time_limit(60)  # The same
+        callback = CustomCallback(self)
+        model.add_progress_listener(callback)
         solution = model.solve()
         end_time = timeit.default_timer()
         elapsed_time = end_time - start_time
-        # print(f"stopped solving. Time taken: {elapsed_time:.6f} seconds")
 
         if solution:
-            #print("Optimal objective value:", solution.get_objective_value())
-
-            # Print weapon assignments
             for t_ in range(t):
-                #print(f"\nTime period {t_}:")
                 for i in range(m):
                     for j in range(n):
                         val = solution.get_value(f'x_{t_}_{i}_{j}')
-                        # print(f"x_{t_}_{i}_{j} Weapon {i} -> Target {j}: {val:.2f}")
 
             x_var = np.zeros((t, m, n))
 
-            # Wypełnimy tę macierz wartościami z rozwiązania
             for t_ in range(t):
                 for i in range(m):
                     for j in range(n):
                         val = solution.get_value(f'x_{t_}_{i}_{j}')
                         x_var[t_, i, j] = val
-            # print(x_var)
-            # print(f"{objective(data_path, x_var, False):.3e}")
             self.finished.emit(x_var)
             return x_var
         else:

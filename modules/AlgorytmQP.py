@@ -23,7 +23,7 @@ class CalculationQP(CalculationInterface):
         self.stop = False
 
     def calculate(self, data_path: str):
-        self.emitProgress.emit("start_progress")
+        self.emitProgress.emit(404)
         n = int()  # number of incoming targets (J[j] - [1,2, .. n])
         m = int()  # number of weapons (I[i] - [1,2, .. m])
 

@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (QApplication, QComboBox, QDialog,
                                QDialogButtonBox, QGridLayout, QGroupBox,
                                QFormLayout, QHBoxLayout, QLabel, QLineEdit,
                                QMenu, QMenuBar, QPushButton, QSpinBox,
-                               QTextEdit, QVBoxLayout, QMainWindow, QDockWidget, QToolBar,  QTableWidget,
+                               QTextEdit, QVBoxLayout, QMainWindow, QDockWidget, QToolBar, QTableWidget,
                                QTableWidgetItem, QWidget, QApplication, QMainWindow, QDockWidget,
                                QVBoxLayout, QLabel, QProgressBar, QWidget, QPushButton, QFileDialog, QStatusBar)
 from PySide6.QtWebEngineWidgets import QWebEngineView
@@ -91,12 +91,16 @@ class StatusDockWidget(QDockWidget):
 
 
 class MainWindow(QMainWindow):
-
     file_path = Signal(str)
 
     def __init__(self):
         super().__init__()
 
+        self.buttons = None
+        self.heuristic_quiz_button = None
+        self.heuristic_fire_button = None
+        self.linapprox_button = None
+        self.constraint_button = None
         self.methodchoice = 0
         self.stopwatch_thread = None
         self.stopwatch_worker = None
@@ -220,7 +224,6 @@ class MainWindow(QMainWindow):
     def changeto_qp(self):
         self.methodchoice = 3
 
-
     def create_toolbars(self):
         start_stop_toolbar = QToolBar("startStopToolbar")
         self.addToolBar(Qt.TopToolBarArea, start_stop_toolbar)
@@ -289,8 +292,8 @@ class MainWindow(QMainWindow):
         self.stopwatch_thread.start()
 
         self.start_calc_button.setEnabled(False)
-        if self.methodchoice >= 2:
-            self.stop_calc_button.setEnabled(True)
+
+        self.stop_calc_button.setEnabled(True)
 
     def stop_calculations(self):
         self.worker.calc.stop = True
@@ -302,10 +305,11 @@ class MainWindow(QMainWindow):
         self.central_widget = GraphWidget(message)
         self.setCentralWidget(self.central_widget)
         print(f"Finished, solve: {message}")
-        self.status_dock_widget.value_label.setText(f"Wynik: {round(objective(self.selected_file_path, message, False),3)}")
+        self.status_dock_widget.value_label.setText(
+            f"Wynik: {objective(self.selected_file_path, message, False)}")
         self.start_calc_button.setEnabled(True)
         self.stop_calc_button.setEnabled(False)
 
     def update_progress(self, message):
         self.status_dock_widget.value_label.setText(f"Aktualna wartość:"
-                                                    f" {round(objective(self.selected_file_path, message, False),3)}")
+                                                    f" {objective(self.selected_file_path, message, False)}")

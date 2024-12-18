@@ -88,7 +88,7 @@ class CalculationFHO(CalculationInterface):
 
     def calculate(self, data_path: str):
 
-        self.emitProgress.emit("start_progress")
+        self.emitProgress.emit(404)
 
         t, m, n, V, w, p, s, v, r = opendata(data_path, False)
         # Example parameters
